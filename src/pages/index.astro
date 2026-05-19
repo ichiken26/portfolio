@@ -8,15 +8,15 @@ import Layout from "../layouts/Layout.astro";
 const products = (await getCollection("products")).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<Layout title="KOKAGE Portfolio | Web / App / Pixel Art">
+<Layout title="KOKAGE Portfolio">
 	<main>
 		<section class="hero">
 			<div class="hero-copy">
 				<p class="eyebrow">Web Developer / Creative Builder</p>
-				<h1 class="page-title">Web とアプリを、軽く速く扱いやすく作る。</h1>
+				<h1 class="page-title">Webアプリを<br>よりシンプルに美しく</h1>
 				<p class="lead">
-					Vue/Nuxt、React、FastAPI、Django、Cloudflare、Electron を使い、Web
-					からデスクトップまで制作します。Unity と C# は学習中で、Aseprite
+					Vue/Nuxt, React, Hono, FastAPI, Django, Cloudflare, Electronなどの技術スタックを用い、Webアプリ
+					やデスクトップアプリを制作します。Unity と C# は学習中で、Aseprite
 					によるドット絵素材も制作できます。
 				</p>
 				<div class="button-row">
