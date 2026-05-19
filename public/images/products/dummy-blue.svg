@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Portfolio Site Dummy">
+  <rect width="640" height="360" fill="#0f766e"/>
+  <rect x="28" y="28" width="584" height="304" fill="#ecf8f5" rx="12"/>
+  <rect x="56" y="62" width="110" height="16" fill="#0f766e" opacity="0.35"/>
+  <rect x="56" y="96" width="420" height="18" fill="#0f766e" opacity="0.75"/>
+  <rect x="56" y="130" width="360" height="14" fill="#0f766e" opacity="0.45"/>
+  <rect x="56" y="168" width="160" height="128" fill="#0f766e" opacity="0.2" rx="8"/>
+  <rect x="236" y="168" width="160" height="128" fill="#0f766e" opacity="0.32" rx="8"/>
+  <rect x="416" y="168" width="160" height="128" fill="#0f766e" opacity="0.45" rx="8"/>
+</svg>

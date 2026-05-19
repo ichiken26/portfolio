@@ -1,0 +1,162 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="About | Ichiken Portfolio" description="自己紹介と制作領域のページです。">
+	<main>
+		<section class="intro">
+			<p class="eyebrow">自己紹介</p>
+			<h1 class="page-title">About</h1>
+			<p class="lead">
+				フロントエンド、バックエンド、公開基盤、デスクトップアプリまで、目的に合わせた技術選定や設計が可能です。<br>
+				ドット絵制作もできるため、UI や小さなビジュアル素材まで一貫して扱えます。<br>
+				業務ではWeb技術スタックを活用してWebアプリやElectronアプリの開発に携わっています。最近はAIを活用したプロジェクトに携わることも増えています。<br>
+				「おもろい」ことが大好きで、好奇心旺盛に、貪欲になんでも学ぶをモットーにしています。好きな言葉は「思い立ったが吉日」
+			</p>
+		</section>
+
+		<section class="profile-layout">
+			<div class="profile-panel">
+				<h2>略歴</h2>
+				<table class="history-table">
+					<thead>
+						<tr>
+							<th scope="col"></th>
+							<th scope="col">出来事</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>2001/07</td>
+							<td>生誕、青年期まで九州にて過ごす</td>
+						</tr>
+						<tr>
+							<td>2021/04</td>
+							<td>大阪大学 理学部 化学科 入学</td>
+						</tr>
+						<tr>
+							<td>2025/03</td>
+							<td>大阪大学 理学部 化学科 卒業</td>
+						</tr>
+						<tr>
+							<td>2025/04</td>
+							<td>株式会社TBSグロウディア入社 SEとして勤務</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="profile-panel">
+				<h2>対応領域</h2>
+				<ul>
+					<li>Vue/Nuxt または React を使った Web フロントエンド</li>
+					<li>FastAPIやHonoなどを活用したAPI作成</li>
+					<li>FirebaseやGoogleOAuth, Cloudflareを活用した、Google認証などの認証基盤の作成</li>
+					<li>Cloudflare を使った公開・配信基盤</li>
+					<li>Electron によるデスクトップアプリ</li>
+					<li>Aseprite によるドット絵素材制作</li>
+				</ul>
+			</div>
+			<div class="profile-panel">
+				<h2>現在伸ばしている分野</h2>
+				<p>
+					C# と Unity を学習中です。Web制作で培った設計力を、ゲームやインタラクティブな表現にも広げています。<br>
+					ギターやベース、ドラムといった音楽趣味も合わせてRPGを1つ作ってみることが現在の目標です。<br>
+					AWSやGoogle Cloudなどのクラウド基盤についても学習中。<br>
+				</p>
+			</div>
+			<div class="profile-panel">
+				<h2>活動について</h2>
+				<ul class="activity-links">
+					<li><a href="https://github.com/ichiken26" target="_blank" rel="noreferrer noopener">GitHub</a></li>
+					<li><a href="https://note.com/imjojojojohn" target="_blank" rel="noreferrer noopener">note+</a></li>
+					<li><a href="https://qiita.com/ichiken26" target="_blank" rel="noreferrer noopener">Qiita</a></li>
+				</ul>
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.intro {
+		padding: 44px 0 28px;
+	}
+
+	.profile-layout {
+		display: grid;
+		grid-template-columns: 0.5fr 0.5fr;
+		gap: 18px;
+		margin-top: 28px;
+	}
+
+	.profile-panel {
+		padding: 26px;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: var(--surface);
+		box-shadow: var(--shadow);
+	}
+
+
+
+	h2 {
+		margin: 0 0 14px;
+		font-size: 24px;
+	}
+
+	p,
+	li {
+		color: var(--muted);
+		line-height: 1.85;
+	}
+
+	p {
+		margin: 0;
+	}
+
+	ul {
+		display: grid;
+		gap: 10px;
+		margin: 0;
+		padding-left: 1.2em;
+	}
+
+	.activity-links a {
+		color: var(--accent-strong);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.activity-links a:hover {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.history-table {
+		width: 100%;
+		border-collapse: collapse;
+		color: var(--muted);
+		background: var(--surface);
+	}
+
+	.history-table th,
+	.history-table td {
+		padding: 10px 12px;
+		border: 1px solid var(--line);
+		text-align: left;
+		background: var(--surface);
+	}
+
+	.history-table th {
+		font-weight: 600;
+	}
+
+	@media (max-width: 800px) {
+		.profile-layout {
+			grid-template-columns: 1fr;
+		}
+
+		.profile-panel:first-child {
+			grid-row: auto;
+		}
+	}
+</style>

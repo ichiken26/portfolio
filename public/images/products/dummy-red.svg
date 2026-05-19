@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="FastAPI Dashboard Dummy">
+  <rect width="640" height="360" fill="#d8694a"/>
+  <rect x="24" y="24" width="592" height="312" fill="#fff2ee" rx="12"/>
+  <rect x="52" y="56" width="536" height="34" fill="#d8694a" opacity="0.25" rx="6"/>
+  <rect x="52" y="110" width="120" height="198" fill="#d8694a" opacity="0.45" rx="6"/>
+  <rect x="190" y="110" width="398" height="92" fill="#d8694a" opacity="0.24" rx="6"/>
+  <rect x="190" y="216" width="122" height="92" fill="#d8694a" opacity="0.38" rx="6"/>
+  <rect x="326" y="216" width="122" height="92" fill="#d8694a" opacity="0.48" rx="6"/>
+  <rect x="462" y="216" width="126" height="92" fill="#d8694a" opacity="0.62" rx="6"/>
+</svg>

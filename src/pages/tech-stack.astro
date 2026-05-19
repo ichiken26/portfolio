@@ -1,0 +1,40 @@
+---
+import TechStackCard from "../components/TechStackCard.tsx";
+import { techStacks } from "../data/portfolio";
+import Layout from "../layouts/Layout.astro";
+
+const categories = [...new Set(techStacks.map((tech) => tech.category))];
+---
+
+<Layout title="Tech Stack | Ichiken Portfolio" description="扱える技術スタックの一覧ページです。">
+	<main>
+		<section class="page-head">
+			<p class="eyebrow">Tech Stack</p>
+			<h1 class="page-title">制作で使える技術スタック</h1>
+			<p class="lead">
+				フロントエンド、バックエンド、公開基盤、デスクトップ、クリエイティブ制作までを一覧化しています。
+			</p>
+		</section>
+
+		{categories.map((category) => (
+			<section class="stack-section">
+				<h2 class="section-title">{category}</h2>
+				<div class="card-grid">
+					{techStacks
+						.filter((tech) => tech.category === category)
+						.map((tech) => <TechStackCard tech={tech} />)}
+				</div>
+			</section>
+		))}
+	</main>
+</Layout>
+
+<style>
+	.page-head {
+		padding: 44px 0 34px;
+	}
+
+	.stack-section {
+		padding-top: 34px;
+	}
+</style>

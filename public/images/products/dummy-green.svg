@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Pixel Game Prototype Dummy">
+  <rect width="640" height="360" fill="#4f6f52"/>
+  <rect x="20" y="20" width="600" height="320" fill="#eff6f0" rx="12"/>
+  <rect x="52" y="54" width="536" height="34" fill="#4f6f52" opacity="0.3" rx="8"/>
+  <rect x="52" y="108" width="258" height="206" fill="#4f6f52" opacity="0.2" rx="10"/>
+  <rect x="330" y="108" width="258" height="94" fill="#4f6f52" opacity="0.35" rx="10"/>
+  <rect x="330" y="220" width="78" height="94" fill="#4f6f52" opacity="0.45" rx="10"/>
+  <rect x="426" y="220" width="78" height="94" fill="#4f6f52" opacity="0.58" rx="10"/>
+  <rect x="522" y="220" width="66" height="94" fill="#4f6f52" opacity="0.72" rx="10"/>
+</svg>

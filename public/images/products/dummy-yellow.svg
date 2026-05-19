@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Electron Toolkit Dummy">
+  <rect width="640" height="360" fill="#d59f2a"/>
+  <rect x="36" y="30" width="568" height="300" fill="#fff8e8" rx="14"/>
+  <circle cx="86" cy="72" r="8" fill="#d59f2a" opacity="0.55"/>
+  <circle cx="116" cy="72" r="8" fill="#d59f2a" opacity="0.55"/>
+  <circle cx="146" cy="72" r="8" fill="#d59f2a" opacity="0.55"/>
+  <rect x="64" y="104" width="512" height="24" fill="#d59f2a" opacity="0.35" rx="6"/>
+  <rect x="64" y="146" width="244" height="156" fill="#d59f2a" opacity="0.25" rx="8"/>
+  <rect x="332" y="146" width="244" height="72" fill="#d59f2a" opacity="0.4" rx="8"/>
+  <rect x="332" y="230" width="244" height="72" fill="#d59f2a" opacity="0.58" rx="8"/>
+</svg>

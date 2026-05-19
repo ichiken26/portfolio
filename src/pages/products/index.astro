@@ -1,0 +1,35 @@
+---
+import ProductCard from "../../components/ProductCard.vue";
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+const products = (await getCollection("products")).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Layout title="Products | Ichiken Portfolio" description="制作したサイトやプロダクトの一覧ページです。">
+	<main>
+		<section class="page-head">
+			<p class="eyebrow">Products</p>
+			<h1 class="page-title">作ったサイトやプロダクト</h1>
+			<p class="lead">
+				様々な業務ツールを作成することに最近は熱をあげています。
+			</p>
+		</section>
+
+		<section class="products-list" aria-label="Product list">
+			<div class="card-grid">
+				{products.map((product) => <ProductCard product={product} />)}
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.page-head {
+		padding: 44px 0 34px;
+	}
+
+	.products-list {
+		padding-top: 16px;
+	}
+</style>
