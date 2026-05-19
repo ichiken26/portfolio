@@ -12,7 +12,7 @@ stack:
 order: 1
 liveUrl: "https://portfolio.62ichiken.workers.dev/"
 githubUrls: 
-  "フロント": "https://github.com/ichiken26/portfolio"
+  "Source": "https://github.com/ichiken26/portfolio"
 ---
 
 ## 概要

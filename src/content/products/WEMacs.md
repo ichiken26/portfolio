@@ -10,7 +10,7 @@ stack:
 order: 4
 liveUrl: "https://github.com/ichiken26/WEmacs"
 githubUrls:
-  "App": "https://github.com/ichiken26/WEmacs"
+  "Source": "https://github.com/ichiken26/WEmacs"
 ---
 
 ## 概要

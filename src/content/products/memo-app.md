@@ -9,6 +9,9 @@ stack:
   - Cloudflare
   - Firebase
 order: 2
+liveUrl: "https://memo-app.62ichiken.workers.dev/"
+githubUrls: 
+  "Source": "https://github.com/ichiken26/memo-app"
 ---
 
 ## 概要
