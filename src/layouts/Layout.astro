@@ -1,23 +1,268 @@
+---
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'KOKAGE Portfolio',
+	description = 'Web development, backend, Cloudflare, desktop apps, game development, and pixel art portfolio.',
+} = Astro.props;
+
+const navItems = [
+	{ href: "/", label: "Top" },
+	{ href: "/about/", label: "About" },
+	{ href: "/tech-stack/", label: "Tech Stack" },
+	{ href: "/products/", label: "Products" },
+];
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link id="animated-favicon" rel="icon" type="image/png" href="/slimeAnime-0.png" />
+		<meta name="description" content={description} />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
 	</head>
 	<body>
-		<slot />
+		<div class="site-shell">
+			<header class="site-header">
+				<a class="brand" href="/" aria-label="Portfolio top">
+					<img class="brand-mark" src="/slimeAnime.gif" alt="" aria-hidden="true" />
+					<span>KOKAGE</span>
+				</a>
+				<nav class="site-nav" aria-label="Main navigation">
+					{navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+				</nav>
+			</header>
+			<slot />
+		</div>
+		<script>
+			const favicon = document.querySelector<HTMLLinkElement>("#animated-favicon");
+			const faviconFrames = [
+				"/slimeAnime-0.png",
+				"/slimeAnime-1.png",
+				"/slimeAnime-2.png",
+				"/slimeAnime-3.png",
+				"/slimeAnime-4.png",
+			];
+			let faviconFrame = 0;
+
+			if (favicon) {
+				window.setInterval(() => {
+					faviconFrame = (faviconFrame + 1) % faviconFrames.length;
+					favicon.href = faviconFrames[faviconFrame];
+				}, 180);
+			}
+		</script>
 	</body>
 </html>
 
 <style>
+	:root {
+		color-scheme: light;
+		--bg: #f7f8f4;
+		--surface: #ffffff;
+		--surface-muted: #eef3ed;
+		--ink: #17211d;
+		--muted: #62706a;
+		--line: #dce5dc;
+		--accent: #0f766e;
+		--accent-strong: #0b5f59;
+		--gold: #d59f2a;
+		--coral: #d8694a;
+		--shadow: 0 18px 50px rgba(27, 42, 38, 0.1);
+		font-family:
+			Inter, "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui,
+			sans-serif;
+	}
+
 	html,
 	body {
 		margin: 0;
 		width: 100%;
-		height: 100%;
+		min-height: 100%;
+		background: var(--bg);
+		color: var(--ink);
+	}
+
+	body {
+		overflow-x: hidden;
+	}
+
+	a {
+		color: inherit;
+	}
+
+	.site-shell {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		background:
+			linear-gradient(90deg, rgba(15, 118, 110, 0.07) 1px, transparent 1px),
+			linear-gradient(rgba(15, 118, 110, 0.06) 1px, transparent 1px);
+		background-size: 34px 34px;
+	}
+
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		padding: 16px clamp(18px, 4vw, 56px);
+		background: rgba(247, 248, 244, 0.88);
+		backdrop-filter: blur(16px);
+		border-bottom: 1px solid rgba(220, 229, 220, 0.82);
+	}
+
+	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		font-weight: 800;
+		text-decoration: none;
+	}
+
+	.brand-mark {
+		width: 24px;
+		height: 24px;
+		display: block;
+		image-rendering: pixelated;
+	}
+
+	.site-nav {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+
+	.site-nav a {
+		border: 1px solid transparent;
+		border-radius: 999px;
+		padding: 8px 12px;
+		color: var(--muted);
+		font-size: 14px;
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.site-nav a:hover,
+	.site-nav a:focus-visible {
+		border-color: var(--line);
+		background: var(--surface);
+		color: var(--ink);
+		outline: none;
+	}
+
+	.site-footer {
+		display: flex;
+		justify-content: space-between;
+		gap: 16px;
+		margin-top: auto;
+		padding: 28px clamp(18px, 4vw, 56px);
+		color: var(--muted);
+		border-top: 1px solid var(--line);
+		background: rgba(255, 255, 255, 0.68);
+	}
+
+	.site-footer a {
+		color: var(--accent-strong);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	:global(main) {
+		width: min(1120px, calc(100% - 36px));
+		margin: 0 auto;
+		padding: 48px 0 72px;
+	}
+
+	:global(.eyebrow) {
+		margin: 0 0 12px;
+		color: var(--accent-strong);
+		font-size: 13px;
+		font-weight: 800;
+		letter-spacing: 0;
+		text-transform: uppercase;
+	}
+
+	:global(.page-title) {
+		margin: 0;
+		max-width: 820px;
+		font-size: clamp(34px, 7vw, 76px);
+		line-height: 1;
+		letter-spacing: 0;
+	}
+
+	:global(.lead) {
+		max-width: 720px;
+		margin: 20px 0 0;
+		color: var(--muted);
+		font-size: clamp(16px, 2.3vw, 20px);
+		line-height: 1.8;
+	}
+
+	:global(.section-title) {
+		margin: 0 0 18px;
+		font-size: clamp(24px, 4vw, 36px);
+		line-height: 1.2;
+		letter-spacing: 0;
+	}
+
+	:global(.button-row) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-top: 28px;
+	}
+
+	:global(.button) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 44px;
+		padding: 0 18px;
+		border-radius: 8px;
+		border: 1px solid var(--ink);
+		background: var(--ink);
+		color: white;
+		font-weight: 800;
+		text-decoration: none;
+		box-shadow: 5px 5px 0 var(--gold);
+	}
+
+	:global(.button.secondary) {
+		background: var(--surface);
+		color: var(--ink);
+		box-shadow: 5px 5px 0 var(--surface-muted);
+	}
+
+	:global(.card-grid) {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 18px;
+	}
+
+	@media (max-width: 700px) {
+		.site-header {
+			align-items: flex-start;
+			flex-direction: column;
+		}
+
+		.site-nav {
+			justify-content: flex-start;
+		}
+
+		.site-footer {
+			flex-direction: column;
+		}
 	}
 </style>
