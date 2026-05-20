@@ -64,7 +64,7 @@ export const techStacks: TechStack[] = [
 	},
 	{
 		name: ".NET",
-		category: "DeskTop",
+		category: "Desktop",
 		level: "学習中",
 		tags: ["C#"],
 	},
