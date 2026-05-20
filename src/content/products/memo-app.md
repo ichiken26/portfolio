@@ -6,7 +6,8 @@ summary: Googleアカウントごとにタグ付けされたメモを作れるWe
 imagePath: "/images/products/memoapplogo.svg"
 stack:
   - Nuxt
-  - Cloudflare
+  - Cloudflare Workers
+  - Cloudflare D1
   - Firebase
 order: 2
 liveUrl: "https://memo-app.62ichiken.workers.dev/"

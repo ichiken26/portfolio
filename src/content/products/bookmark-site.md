@@ -8,6 +8,10 @@ stack:
   - Vue
   - React
   - Hono
+  - Cloudflare Workers
+  - Cloudflare D1
+  - Cloudflare Zero Trust
+  - Google OAuth
 order: 3
 liveUrl: "https://ichikenbookmark.62ichiken.workers.dev/"
 githubUrls: 

@@ -8,7 +8,7 @@ stack:
   - Astro
   - TypeScript
   - CSS
-  - GitHub Pages
+  - Cloudflare Workers
 order: 1
 liveUrl: "https://portfolio.62ichiken.workers.dev/"
 githubUrls: 

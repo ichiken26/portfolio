@@ -24,7 +24,7 @@ export const techStacks: TechStack[] = [
 		name: "Astro",
 		category: "Frontend",
 		level: "実務対応",
-		tags: ["Astro", "TypeScript", "SSG"],
+		tags: ["TypeScript", "JavaScript"],
 	},
 	{
 		name: "FastAPI",
@@ -42,7 +42,7 @@ export const techStacks: TechStack[] = [
 		name: "Hono",
 		category: "Backend",
 		level: "実務対応",
-		tags: ["Python"],
+		tags: ["TypeScript"],
 	},
 	{
 		name: "Cloudflare",
@@ -54,11 +54,17 @@ export const techStacks: TechStack[] = [
 		name: "Electron",
 		category: "Desktop",
 		level: "実務対応",
-		tags: ["Desktop App", "Node.js", "Packaging", "TypeScript"],
+		tags: ["TypeScript"],
 	},
 	{
 		name: "Unity",
 		category: "Game",
+		level: "学習中",
+		tags: ["C#"],
+	},
+	{
+		name: ".NET",
+		category: "DeskTop",
 		level: "学習中",
 		tags: ["C#"],
 	},
