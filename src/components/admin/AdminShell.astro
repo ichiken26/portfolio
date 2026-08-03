@@ -1,0 +1,16 @@
+---
+interface Props { title: string; published?: boolean }
+const { title, published } = Astro.props;
+---
+<div class="admin-shell">
+  <header class="admin-header">
+    <a href="/admin/" class="admin-brand">KOKAGE CMS</a>
+    <h1>{title}</h1>
+    {published !== undefined && <span class:list={["publish-state", { on: published }]}>{published ? "公開中" : "非公開"}</span>}
+    <a href="/" target="_blank" rel="noreferrer noopener">サイトを表示</a>
+  </header>
+  <slot />
+</div>
+<style>
+  .admin-shell{min-height:100vh;background:#f7f8f4;color:#17211d;font-family:Inter,"Noto Sans JP",sans-serif}.admin-header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:14px clamp(16px,4vw,48px);border-bottom:1px solid #dce5dc;background:rgba(247,248,244,.95);backdrop-filter:blur(12px)}.admin-header h1{margin:0;font-size:20px;flex:1}.admin-brand,.admin-header a{color:#0b5f59;font-weight:800;text-decoration:none}.publish-state{padding:7px 10px;border-radius:999px;background:#e7e7e7;font-size:13px;font-weight:800}.publish-state.on{background:#d8f3e8;color:#075b3c}@media(max-width:640px){.admin-header{flex-wrap:wrap}.admin-header h1{order:3;flex-basis:100%}}
+</style>

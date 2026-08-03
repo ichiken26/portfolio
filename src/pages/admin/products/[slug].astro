@@ -1,0 +1,5 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro"; import { ProductEditor } from "../../../components/admin/CmsEditor";
+const slug=Astro.params.slug ?? ""; if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return Astro.redirect("/admin/products/");
+---
+<AdminShell title={`Product: ${slug}`}><ProductEditor slug={slug} client:only="react" /></AdminShell>
