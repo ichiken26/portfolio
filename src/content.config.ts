@@ -12,7 +12,7 @@ const products = defineCollection({
 		stack: z.array(z.string()),
 		order: z.number().int(),
 		liveUrl: z.string().optional(),
-		githubUrls: z.record(z.string()).optional(),
+		githubUrls: z.record(z.string(), z.string()).optional(),
 	}),
 });
 
