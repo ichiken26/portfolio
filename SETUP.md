@@ -162,10 +162,10 @@ Cloudflare Dashboardで次を行います。
 4. Free planまたは利用するplanを選択する
 5. `Settings`でTeam domainを確認する
 
-Team nameが`kokage`なら、Team domainは通常次の形式です。
+この環境で確認済みのTeam domainは次の値です。
 
 ```text
-kokage.cloudflareaccess.com
+cold-salad-4ada.cloudflareaccess.com
 ```
 
 `portfolioAPI/wrangler.jsonc`の次を置換します。
@@ -174,10 +174,10 @@ kokage.cloudflareaccess.com
 "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_TEAM.cloudflareaccess.com"
 ```
 
-置換例です。
+設定済みの値です。
 
 ```json
-"ACCESS_TEAM_DOMAIN": "kokage.cloudflareaccess.com"
+"ACCESS_TEAM_DOMAIN": "cold-salad-4ada.cloudflareaccess.com"
 ```
 
 `https://`と末尾の`/`は付けません。
@@ -204,7 +204,8 @@ kokage.cloudflareaccess.com
 "DEV_AUTH_BYPASS": "false"
 ```
 
-`ACCESS_AUD`はAccess Application作成後に設定するため、この段階ではプレースホルダーのままで構いません。
+`ACCESS_AUD`には作成済みApplicationのAudience Tag
+`5f705bd65c4d9c20962a4252f4739e10d2123a12294f3531937e208c64d724a1`を設定済みです。
 
 ## 8. D1 migrationを本番へ適用する
 
@@ -459,19 +460,13 @@ Policyを保存し、Applicationの作成を完了します。
 Application Audience (AUD) Tag
 ```
 
-`portfolioAPI/wrangler.jsonc`の次を置換します。
+この環境では次の値を設定済みです。
 
 ```json
-"ACCESS_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUD"
+"ACCESS_AUD": "5f705bd65c4d9c20962a4252f4739e10d2123a12294f3531937e208c64d724a1"
 ```
 
-置換後の例です。
-
-```json
-"ACCESS_AUD": "取得したApplication Audienceの値"
-```
-
-APIを再デプロイします。
+APIはこの値でデプロイ済みです。値を変更した場合だけ再デプロイします。
 
 ```bash
 cd /home/ichiken/my-portfolio/portfolioAPI

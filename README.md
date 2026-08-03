@@ -36,7 +36,7 @@ APIを `http://localhost:8787`、フロントを `http://localhost:4321` で起�
 
 ## セキュリティ・運用
 
-管理権限はUIの非表示ではなくCloudflare AccessとAPI JWT検証で強制します。Markdownは許可タグ・属性だけにsanitizeし、外部リンクはHTTP(S)検証と`noopener noreferrer`を使用します。秘密値、Access AUD、D1 IDはリポジトリへ保存しません。
+管理権限はUIの非表示ではなくCloudflare AccessとAPI JWT検証で強制します。Markdownは生HTML、画像、危険なURLスキームをレンダラーで除外します。秘密値はリポジトリへ保存しません。Access AUDとD1 IDはリソース識別子であり、秘密情報としては扱いません。
 
 公開データが更新されない場合はAPI health、Access policy、CORS、D1 migration、Worker logsの順に確認します。API障害時の既定表示が長期間続かないよう監視を設定してください。復旧後はCMSのversionを確認してから再保存します。
 
