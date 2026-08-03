@@ -4,5 +4,11 @@
   "compatibility_date": "2026-07-31",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [{ "pattern": "kokage-studio.com", "custom_domain": true }],
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "58927d7064a441128585846b7e0e0ab9"
+    }
+  ],
   "vars": { "PUBLIC_API_BASE_URL": "https://api.kokage-studio.com/api/v1" }
 }
