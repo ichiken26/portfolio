@@ -1,5 +1,7 @@
 # build output
 dist/
+.wrangler-dry-run/
+.wrangler/
 
 # generated types
 .astro/
