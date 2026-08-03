@@ -4,8 +4,18 @@ import TechStackCard from "../components/TechStackCard.tsx";
 import { getCollection } from "astro:content";
 import { techStacks } from "../data/portfolio";
 import Layout from "../layouts/Layout.astro";
+import { publicContent, publicProducts } from "../lib/api";
+import type { Product, TechData } from "../lib/types";
 
-const products = (await getCollection("products")).sort((a, b) => a.data.order - b.data.order);
+let products: any[];
+let featured = techStacks;
+try {
+	const [productResult, techResult] = await Promise.all([publicProducts(), publicContent<TechData>("tech-stack")]);
+	products = productResult.products.map((p: Product) => ({ id: p.slug, data: { title:p.title,type:p.type,status:p.status,summary:p.summary,stack:p.tags,imagePath:p.imagePath } }));
+	featured = techResult.data.categories.flatMap((c) => c.items.map((t) => ({ ...t, category:c.name, level:t.level as never })));
+} catch {
+	products = (await getCollection("products")).sort((a, b) => a.data.order - b.data.order);
+}
 ---
 
 <Layout title="KOKAGE Portfolio">
@@ -36,7 +46,7 @@ const products = (await getCollection("products")).sort((a, b) => a.data.order -
 				<a href="/tech-stack/">すべて見る</a>
 			</div>
 			<div class="card-grid">
-				{techStacks.slice(0, 4).map((tech) => <TechStackCard tech={tech} />)}
+				{featured.slice(0, 4).map((tech) => <TechStackCard tech={tech} />)}
 			</div>
 		</section>
 

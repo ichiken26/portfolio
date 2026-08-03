@@ -1,35 +1,5 @@
 ---
-import ProductCard from "../../components/ProductCard.vue";
-import { getCollection } from "astro:content";
-import Layout from "../../layouts/Layout.astro";
-
-const products = (await getCollection("products")).sort((a, b) => a.data.order - b.data.order);
+import ProductCard from "../../components/ProductCard.vue";import Layout from "../../layouts/Layout.astro";import {publicContent,publicProducts} from "../../lib/api";import type {Product,ProductsPage} from "../../lib/types";import {getCollection} from "astro:content";
+let page:ProductsPage={title:"作ったサイトやプロダクト",summary:"様々な業務ツールを作成することに最近は熱をあげています。"};let products:any[]=[];try{page=(await publicContent<ProductsPage>("products")).data;const result=await publicProducts();products=result.products.map((p:Product)=>({id:p.slug,data:{title:p.title,type:p.type,status:p.status,summary:p.summary,stack:p.tags,imagePath:p.imagePath}}))}catch{products=(await getCollection("products")).sort((a,b)=>a.data.order-b.data.order)}
 ---
-
-<Layout title="Products | KOKAGE Portfolio" description="制作したサイトやプロダクトの一覧ページです。">
-	<main>
-		<section class="page-head">
-			<p class="eyebrow">Products</p>
-			<h1 class="page-title">作ったサイトやプロダクト</h1>
-			<p class="lead">
-				様々な業務ツールを作成することに最近は熱をあげています。
-			</p>
-		</section>
-
-		<section class="products-list" aria-label="Product list">
-			<div class="card-grid">
-				{products.map((product) => <ProductCard product={product} />)}
-			</div>
-		</section>
-	</main>
-</Layout>
-
-<style>
-	.page-head {
-		padding: 44px 0 34px;
-	}
-
-	.products-list {
-		padding-top: 16px;
-	}
-</style>
+<Layout title="Products | KOKAGE Portfolio"><main><section class="page-head"><p class="eyebrow">Products</p><h1 class="page-title">{page.title}</h1><p class="lead">{page.summary}</p></section><section class="products-list"><div class="card-grid">{products.map(product=><ProductCard product={product}/>)}</div></section></main></Layout><style>.page-head{padding:44px 0 34px}.products-list{padding-top:16px}</style>
