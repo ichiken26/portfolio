@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { API_BASE, api } from "../../lib/api";
+import { API_BASE, adminApi } from "../../lib/api";
 import { renderSafeMarkdown } from "../../lib/markdown";
 import type {
   AboutBlock,
@@ -9,8 +9,6 @@ import type {
   TechData,
   Versioned,
 } from "../../lib/types";
-import "./cms.css";
-
 type Kind = "about" | "tech-stack" | "products";
 const uid = () => crypto.randomUUID();
 const splitTags = (v: string) =>
@@ -54,8 +52,8 @@ export function ContentEditor({ kind }: { kind: Kind }) {
   > | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    api<Versioned<AboutData | TechData | ProductsPage>>(
-      `/admin/content/${kind}`,
+    adminApi<Versioned<AboutData | TechData | ProductsPage>>(
+      `/content/${kind}`,
     )
       .then(setLoaded)
       .catch((e) => setError(String(e)));
@@ -89,7 +87,7 @@ function LoadedContent({
 }) {
   const saver = useCallback(
     async (v: typeof initial) =>
-      api<typeof initial>(`/admin/content/${kind}`, {
+      adminApi<typeof initial>(`/content/${kind}`, {
         method: "PUT",
         body: JSON.stringify(v),
       }),
@@ -532,14 +530,14 @@ function ProductsManager() {
   const [items, setItems] = useState<Product[]>([]);
   const [slug, setSlug] = useState("");
   const refresh = () =>
-    api<{ products: Product[] }>("/admin/products").then((r) =>
+    adminApi<{ products: Product[] }>("/products").then((r) =>
       setItems(r.products),
     );
   useEffect(() => {
     void refresh();
   }, []);
   const add = async () => {
-    await api("/admin/products", {
+    await adminApi("/products", {
       method: "POST",
       body: JSON.stringify({
         slug,
@@ -573,7 +571,7 @@ function ProductsManager() {
               type="button"
               onClick={async () => {
                 if (confirm(`${p.title}を削除しますか？`)) {
-                  await api(`/admin/products/${p.slug}`, { method: "DELETE" });
+                  await adminApi(`/products/${p.slug}`, { method: "DELETE" });
                   await refresh();
                 }
               }}
@@ -606,7 +604,7 @@ export function ProductEditor({ slug }: { slug: string }) {
   const [loaded, setLoaded] = useState<Product | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    api<Product>(`/admin/products/${slug}`)
+    adminApi<Product>(`/products/${slug}`)
       .then(setLoaded)
       .catch((e) => setError(String(e)));
   }, [slug]);
@@ -622,7 +620,7 @@ export function ProductEditor({ slug }: { slug: string }) {
 function LoadedProduct({ initial }: { initial: Product }) {
   const saver = useCallback(
     (v: Product) =>
-      api<Product>(`/admin/products/${v.slug}`, {
+      adminApi<Product>(`/products/${v.slug}`, {
         method: "PUT",
         body: JSON.stringify(v),
       }),
@@ -638,13 +636,10 @@ function LoadedProduct({ initial }: { initial: Product }) {
   const upload = async (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch(`${API_BASE}/admin/images`, {
+    const data = await adminApi<{ url: string }>("/images", {
       method: "POST",
       body: fd,
-      credentials: "include",
     });
-    if (!res.ok) throw new Error("画像をアップロードできませんでした");
-    const data = (await res.json()) as { url: string };
     set("imagePath", `${API_BASE.replace(/\/api\/v1$/, "")}${data.url}`);
   };
   return (

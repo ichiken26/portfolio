@@ -427,6 +427,8 @@ api.kokage-studio.com/api/v1/admin/*
 - Hostname: `api.kokage-studio.com`
 - Path: `/api/v1/admin/*`
 
+CMSのブラウザ処理は、Access保護対象に含まれるフロント側の`/admin/api/*`を経由します。ここで同じApplicationのAccess assertionをAPIへ転送するため、フロントとAPIを別々のApplicationへ分けないでください。別ApplicationではAUDが異なり、APIが転送されたJWTを拒否します。
+
 次の公開APIはAccess保護対象に含めません。
 
 - `/api/v1/health`

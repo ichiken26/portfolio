@@ -27,7 +27,7 @@ APIを `http://localhost:8787`、フロントを `http://localhost:4321` で起�
 ## 本番設定とデプロイ
 
 1. `PUBLIC_API_BASE_URL=https://api.kokage-studio.com/api/v1` を設定します。
-2. Cloudflare Zero TrustでGoogle IdPを設定し、`kokage-studio.com/admin/*` をAccess Applicationで保護します。API側の管理パスも同じポリシーで保護します。
+2. Cloudflare Zero TrustでGoogle IdPを設定し、`kokage-studio.com/admin/*` とAPI側の管理パスを必ず同じAccess Applicationで保護します。CMSは`/admin/api/*`の同一オリジンプロキシから、同じAUDのAccess assertionをAPIへ転送します。
 3. `wrangler.jsonc` のcustom domainを確認し、DNS/証明書がActiveになってからdeployします。
 4. GitHub Environment `production` に `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID` を登録します。tokenは対象Workerの編集に必要な最小権限にします。
 5. mainへのpushでCI成功後にCDが走ります。API migrationを先に適用してからフロントを公開します。

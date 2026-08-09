@@ -7,4 +7,8 @@ describe("AdminShell document metadata", () => {
     expect(source).toContain('<meta charset="UTF-8" />');
     expect(source.indexOf('<meta charset="UTF-8" />')).toBeLessThan(source.indexOf("<slot />"));
   });
+
+  it("loads the CMS stylesheet from the server-rendered admin shell", () => {
+    expect(source).toContain('import "./cms.css";');
+  });
 });
