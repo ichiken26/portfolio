@@ -21,8 +21,11 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-shrink: 0;
   font-weight: 800;
+  white-space: nowrap;
 }
+.toggle input { width: auto; }
 .editor-card,
 .cms section,
 .cms aside {

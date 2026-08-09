@@ -17,33 +17,74 @@ const splitTags = (v: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-function useAutoSave<T>(
+function useAutoSave<T extends { version?: number }>(
   path: string,
   initial: T,
   save: (value: T) => Promise<T>,
 ) {
-  const [value, setValue] = useState(initial);
+  const [value, setStoredValue] = useState(initial);
   const [state, setState] = useState("保存済み");
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const valueRef = useRef(initial);
+  const dirtyRef = useRef(false);
+  const savingRef = useRef(false);
+  const retryBlockedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setValue = useCallback((next: T) => {
+    valueRef.current = next;
+    dirtyRef.current = true;
+    retryBlockedRef.current = false;
+    setStoredValue(next);
+    setDirty(true);
     setState("未保存");
-    const id = setTimeout(async () => {
-      setState("保存中…");
-      try {
-        const next = await save(value);
-        setValue(next);
+  }, []);
+
+  const saveNow = useCallback(async () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    if (!dirtyRef.current || savingRef.current) return;
+
+    const snapshot = valueRef.current;
+    dirtyRef.current = false;
+    savingRef.current = true;
+    setDirty(false);
+    setSaving(true);
+    setState("保存中…");
+    try {
+      const saved = await save(snapshot);
+      if (dirtyRef.current) {
+        const edited = { ...valueRef.current, version: saved.version };
+        valueRef.current = edited;
+        setStoredValue(edited);
+        setDirty(true);
+        setState("未保存");
+      } else {
+        valueRef.current = saved;
+        setStoredValue(saved);
         setState("保存済み");
-      } catch (e) {
-        setState(e instanceof Error ? `保存失敗: ${e.message}` : "保存失敗");
       }
-    }, 1000);
-    return () => clearTimeout(id);
-  }, [value, path, save]);
-  return { value, setValue, state };
+    } catch (error) {
+      dirtyRef.current = true;
+      retryBlockedRef.current = true;
+      setDirty(true);
+      setState(error instanceof Error ? `保存失敗: ${error.message}` : "保存失敗");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }, [save]);
+
+  useEffect(() => {
+    if (!dirty || saving || retryBlockedRef.current) return;
+    timerRef.current = setTimeout(() => void saveNow(), 1000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [dirty, path, saveNow, saving, value]);
+
+  return { value, setValue, state, saveNow, dirty, saving };
 }
 
 export function ContentEditor({ kind }: { kind: Kind }) {
@@ -93,7 +134,7 @@ function LoadedContent({
       }),
     [kind],
   );
-  const { value, setValue, state } = useAutoSave(kind, initial, saver);
+  const { value, setValue, state, saveNow, dirty, saving } = useAutoSave(kind, initial, saver);
   const updateData = (data: typeof value.data) => setValue({ ...value, data });
   return (
     <main className="cms">
@@ -109,6 +150,7 @@ function LoadedContent({
           <span>公開する</span>
         </label>
         <output aria-live="polite">{state}</output>
+        <button type="button" onClick={() => void saveNow()} disabled={!dirty || saving}>今すぐ保存</button>
       </div>
       {kind === "about" ? (
         <AboutForm value={value.data as AboutData} onChange={updateData} />
@@ -630,6 +672,9 @@ function LoadedProduct({ initial }: { initial: Product }) {
     value: p,
     setValue: setP,
     state,
+    saveNow,
+    dirty,
+    saving,
   } = useAutoSave(initial.slug, initial, saver);
   const set = <K extends keyof Product>(k: K, v: Product[K]) =>
     setP({ ...p, [k]: v });
@@ -654,6 +699,7 @@ function LoadedProduct({ initial }: { initial: Product }) {
           公開する
         </label>
         <output aria-live="polite">{state}</output>
+        <button type="button" onClick={() => void saveNow()} disabled={!dirty || saving}>今すぐ保存</button>
       </div>
       <div className="two-col">
         <div>
