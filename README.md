@@ -21,6 +21,10 @@ APIを `http://localhost:8787`、フロントを `http://localhost:4321` で起�
 - `/admin/tech-stack/`: 大項目と技術項目
 - `/admin/products/`: 一覧設定と製品追加・削除
 - `/admin/products/:slug/`: メタデータ、画像、複数GitHub URL、Markdown本文と安全なプレビュー
+- `/admin/`: 固定ページの追加・一覧・削除
+- `/admin/pages/:slug/`: 固定ページのタイトル、ナビ表示名、公開順、Markdown本文と安全なプレビュー
+
+公開した固定ページは`/:slug/`で表示され、上部ナビへ自動的に追加されます。`about`、`products`など既存ルートと予約語はslugに使用できません。
 
 保存競合はAPIが409を返し、CMSに失敗として表示されます。他タブの変更を上書きせず再読み込みが必要です。画像はAPI側でJPEG/PNG/GIFと5MiB制限を検証します。
 

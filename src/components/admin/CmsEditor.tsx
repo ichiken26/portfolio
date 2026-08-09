@@ -17,7 +17,7 @@ const splitTags = (v: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-function useAutoSave<T extends { version?: number }>(
+export function useAutoSave<T extends { version?: number }>(
   path: string,
   initial: T,
   save: (value: T) => Promise<T>,

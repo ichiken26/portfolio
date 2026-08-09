@@ -1,4 +1,4 @@
-import type { AboutData, Product, ProductsPage, TechData, Versioned } from "./types";
+import type { AboutData, CustomPageNav, Product, ProductsPage, TechData, Versioned } from "./types";
 
 export const API_BASE = (import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8787/api/v1").replace(/\/$/, "");
 export const ADMIN_API_BASE = "/admin/api";
@@ -16,3 +16,4 @@ export const api = <T>(path: string, init?: RequestInit) => request<T>(API_BASE,
 export const adminApi = <T>(path: string, init?: RequestInit) => request<T>(ADMIN_API_BASE, path, init);
 export const publicContent = <T extends AboutData|TechData|ProductsPage>(kind: string) => api<Versioned<T>>(`/content/${kind}`);
 export const publicProducts = () => api<{ products: Product[] }>("/products");
+export const publicPages = () => api<{ pages: CustomPageNav[] }>("/pages");

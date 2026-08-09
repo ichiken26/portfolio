@@ -1,0 +1,7 @@
+---
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import { CustomPageEditor } from "../../../components/admin/CustomPagesEditor";
+const slug = Astro.params.slug ?? "";
+if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return Astro.redirect("/admin/");
+---
+<AdminShell title={`固定ページ: ${slug}`}><CustomPageEditor slug={slug} client:only="react" /></AdminShell>

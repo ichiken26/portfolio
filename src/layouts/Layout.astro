@@ -3,18 +3,21 @@ interface Props {
 	title?: string;
 	description?: string;
 }
+import { publicPages } from "../lib/api";
 
 const {
 	title = 'KOKAGE Portfolio',
 	description = 'Web development, backend, Cloudflare, desktop apps, game development, and pixel art portfolio.',
 } = Astro.props;
 
-const navItems = [
+const fixedNavItems = [
 	{ href: "/", label: "Top" },
 	{ href: "/about/", label: "About" },
 	{ href: "/tech-stack/", label: "Tech Stack" },
 	{ href: "/products/", label: "Products" },
 ];
+const customNavItems = await publicPages().then(({ pages }) => pages.map((page) => ({ href: `/${page.slug}/`, label: page.navLabel }))).catch(() => []);
+const navItems = [...fixedNavItems, ...customNavItems];
 ---
 
 <!doctype html>

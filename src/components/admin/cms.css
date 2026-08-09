@@ -130,6 +130,8 @@
   font-weight: 800;
   text-decoration: none;
 }
+.custom-pages-manager { margin-top: 32px; padding: 20px; border: 1px solid #dce5dc; border-radius: 8px; background: #fff; }
+.custom-pages-manager .row > span { white-space: nowrap; font-size: 13px; font-weight: 800; }
 @media (max-width: 800px) {
   .two-col,
   .grid4 {
