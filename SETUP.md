@@ -338,7 +338,7 @@ npx wrangler deploy
 Cloudflare Dashboardで次を確認します。
 
 1. `Workers & Pages`を開く
-2. `kokage-portfolio`を選択する
+2. `portfolio`を選択する
 3. `Settings`を開く
 4. `Domains & Routes`を開く
 5. `kokage-studio.com`がActiveであることを確認する
