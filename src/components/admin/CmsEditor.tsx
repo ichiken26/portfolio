@@ -25,6 +25,25 @@ const imageFileName = (value: string) => {
     return value;
   }
 };
+export const normalizeProductSlug = (value: string) => {
+  let candidate = value.trim();
+  if (/^https?:\/\//i.test(candidate)) {
+    try {
+      candidate = decodeURIComponent(new URL(candidate).pathname);
+    } catch {
+      return "";
+    }
+  }
+  candidate = candidate.replace(/^\/+|\/+$/g, "").replace(/^products\/+/, "");
+  return candidate
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+    .replace(/-+$/g, "");
+};
 
 export function useAutoSave<T extends { version?: number }>(
   path: string,
@@ -579,7 +598,12 @@ function ProductsPageForm({
 }
 function ProductsManager() {
   const [items, setItems] = useState<Product[]>([]);
-  const [slug, setSlug] = useState("");
+  const [title, setTitle] = useState("");
+  const [urlInput, setUrlInput] = useState("");
+  const [urlTouched, setUrlTouched] = useState(false);
+  const [createState, setCreateState] = useState("");
+  const [creating, setCreating] = useState(false);
+  const slug = normalizeProductSlug(urlInput);
   const refresh = () =>
     adminApi<{ products: Product[] }>("/products").then((r) =>
       setItems(r.products),
@@ -588,37 +612,52 @@ function ProductsManager() {
     void refresh();
   }, []);
   const add = async () => {
-    await adminApi("/products", {
-      method: "POST",
-      body: JSON.stringify({
-        slug,
-        title: "新しいプロダクト",
-        summary: "",
-        type: "Web App",
-        status: "制作中",
-        tags: [],
-        imagePath: "/images/products/dummy-green.svg",
-        dummyColor: "green",
-        liveUrl: "",
-        githubUrls: [],
-        body: "",
-        published: false,
-        order: items.length + 1,
-      }),
-    });
-    setSlug("");
-    await refresh();
+    if (!title.trim() || !slug || creating) return;
+    setCreating(true);
+    setCreateState("製品を作成中…");
+    try {
+      await adminApi("/products", {
+        method: "POST",
+        body: JSON.stringify({
+          slug,
+          title: title.trim(),
+          summary: "",
+          type: "Web App",
+          status: "制作中",
+          tags: [],
+          imagePath: "/images/products/dummy-green.svg",
+          dummyColor: "green",
+          liveUrl: "",
+          githubUrls: [],
+          body: "",
+          published: false,
+          order: Math.max(0, ...items.map((item) => item.order)) + 1,
+        }),
+      });
+      window.location.assign(`/admin/products/${slug}/`);
+    } catch (error) {
+      setCreateState(error instanceof Error ? `作成失敗: ${error.message}` : "作成失敗");
+      setCreating(false);
+    }
   };
   return (
-    <section>
-      <h2>製品一覧</h2>
-      <div className="product-links">
+    <section className="products-manager">
+      <div className="section-heading">
+        <div>
+          <p className="section-kicker">Products</p>
+          <h2>製品一覧</h2>
+        </div>
+        <span className="item-count">{items.length}件</span>
+      </div>
+      <div className="product-links product-list">
         {items.map((p) => (
-          <div className="row" key={p.slug}>
+          <div className="product-list-item" key={p.slug}>
             <a href={`/admin/products/${p.slug}/`}>
-              {p.title} <small>/{p.slug}</small>
+              <strong>{p.title}</strong>
+              <small>/products/{p.slug}/</small>
             </a>
             <button
+              className="danger-button"
               type="button"
               onClick={async () => {
                 if (confirm(`${p.title}を削除しますか？`)) {
@@ -632,22 +671,59 @@ function ProductsManager() {
           </div>
         ))}
       </div>
-      <div className="row">
-        <input
-          aria-label="新しい製品のslug"
-          pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-          placeholder="new-product"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-        />
-        <button
-          type="button"
-          disabled={!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)}
-          onClick={add}
-        >
-          ＋ 製品
-        </button>
-      </div>
+      <form className="product-create-card" onSubmit={(event) => { event.preventDefault(); void add(); }}>
+        <div className="product-create-heading">
+          <div>
+            <p className="section-kicker">New product</p>
+            <h3>製品を追加</h3>
+          </div>
+          <span>非公開で作成されます</span>
+        </div>
+        <div className="product-create-grid">
+          <label className="field">
+            <span>製品名</span>
+            <input
+              placeholder="例: Memo App"
+              value={title}
+              onChange={(event) => {
+                const nextTitle = event.target.value;
+                setTitle(nextTitle);
+                setCreateState("");
+                if (!urlTouched) setUrlInput(normalizeProductSlug(nextTitle));
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>URL</span>
+            <div className="product-url-input">
+              <span>kokage-studio.com/products/</span>
+              <input
+                aria-describedby="product-url-help"
+                placeholder="memo-app"
+                value={urlInput}
+                onChange={(event) => {
+                  setUrlTouched(true);
+                  setUrlInput(event.target.value);
+                  setCreateState("");
+                }}
+              />
+            </div>
+            <small id="product-url-help">
+              空白・大文字・記号は自動整形されます。完全なURLの貼り付けも可能です。
+            </small>
+          </label>
+        </div>
+        <div className="product-create-footer">
+          <div className="product-url-preview">
+            <span>作成されるURL</span>
+            <code>{slug ? `https://kokage-studio.com/products/${slug}/` : "URLを入力してください"}</code>
+          </div>
+          <button className="primary-button" type="submit" disabled={!title.trim() || !slug || creating}>
+            {creating ? "作成中…" : "＋ 製品を追加して編集"}
+          </button>
+        </div>
+        {createState && <p className={createState.startsWith("作成失敗") ? "form-message error" : "form-message"} role="status">{createState}</p>}
+      </form>
     </section>
   );
 }
