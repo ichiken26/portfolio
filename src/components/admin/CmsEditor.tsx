@@ -16,6 +16,15 @@ const splitTags = (v: string) =>
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+const imageFileName = (value: string) => {
+  if (!value) return "未設定";
+  try {
+    const pathname = new URL(value, "https://cms.local").pathname;
+    return decodeURIComponent(pathname.split("/").filter(Boolean).at(-1) ?? value);
+  } catch {
+    return value;
+  }
+};
 
 export function useAutoSave<T extends { version?: number }>(
   path: string,
@@ -660,6 +669,7 @@ export function ProductEditor({ slug }: { slug: string }) {
   return <LoadedProduct initial={loaded} />;
 }
 function LoadedProduct({ initial }: { initial: Product }) {
+  const [imageStatus, setImageStatus] = useState("");
   const saver = useCallback(
     (v: Product) =>
       adminApi<Product>(`/products/${v.slug}`, {
@@ -679,13 +689,19 @@ function LoadedProduct({ initial }: { initial: Product }) {
   const set = <K extends keyof Product>(k: K, v: Product[K]) =>
     setP({ ...p, [k]: v });
   const upload = async (file: File) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    const data = await adminApi<{ url: string }>("/images", {
-      method: "POST",
-      body: fd,
-    });
-    set("imagePath", `${API_BASE.replace(/\/api\/v1$/, "")}${data.url}`);
+    setImageStatus("アップロード中…");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const data = await adminApi<{ url: string }>("/images", {
+        method: "POST",
+        body: fd,
+      });
+      set("imagePath", `${API_BASE.replace(/\/api\/v1$/, "")}${data.url}`);
+      setImageStatus("アップロード完了（自動保存待ち）");
+    } catch (error) {
+      setImageStatus(error instanceof Error ? `アップロード失敗: ${error.message}` : "アップロード失敗");
+    }
   };
   return (
     <main className="cms">
@@ -747,6 +763,10 @@ function LoadedProduct({ initial }: { initial: Product }) {
             />
           </Field>
           <Field label="画像">
+            <small className="current-image-name">
+              現在の画像: <code>{imageFileName(p.imagePath)}</code>
+            </small>
+            {imageStatus && <span className="image-upload-status" role="status">{imageStatus}</span>}
             <span
               className="drop-zone"
               onDragOver={(event) => event.preventDefault()}
@@ -798,7 +818,9 @@ function LoadedProduct({ initial }: { initial: Product }) {
         </div>
         <aside>
           <h2>プレビュー</h2>
-          <img className="preview-image" src={p.imagePath} alt="" />
+          <div className="preview-image-frame">
+            {p.imagePath ? <img className="preview-image" src={p.imagePath} alt={`${p.title} の画像プレビュー`} /> : <span>画像未設定</span>}
+          </div>
           <h1>{p.title}</h1>
           <p>{p.summary}</p>
           <article

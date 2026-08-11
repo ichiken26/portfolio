@@ -11,4 +11,10 @@ describe("CMS save controls", () => {
     expect(source.match(/今すぐ保存/g)).toHaveLength(2);
     expect(source).toContain("disabled={!dirty || saving}");
   });
+
+  it("shows the persisted image filename and upload result", () => {
+    expect(source).toContain("現在の画像:");
+    expect(source).toContain("imageFileName(p.imagePath)");
+    expect(source).toContain("アップロード失敗:");
+  });
 });
