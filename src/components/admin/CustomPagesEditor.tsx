@@ -5,7 +5,7 @@ import type { CustomPage } from "../../lib/types";
 import { useAutoSave } from "./CmsEditor";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const reserved = new Set(["admin", "api", "about", "tech-stack", "products", "_astro", "_image"]);
+const reserved = new Set(["admin", "api", "about", "tech-stack", "products", "privacy-policy", "use-kiyaku", "_astro", "_image"]);
 
 export function CustomPagesManager() {
   const [pages, setPages] = useState<CustomPage[]>([]);

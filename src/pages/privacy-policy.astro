@@ -1,0 +1,66 @@
+---
+import LegalDocument from "../components/legal/LegalDocument.astro";
+---
+<LegalDocument
+  eyebrow="Privacy Policy"
+  title="プライバシーポリシー"
+  description="KOKAGE（以下「当サイト」）における利用者情報の取り扱いについて定めます。"
+  enactedAt="2026年11月10日"
+>
+  <h2>1. 適用範囲</h2>
+  <p>本ポリシーは、当サイト（https://kokage-studio.com/ およびそのサブドメインで提供するAPI・管理画面を含みます）を利用するすべての方に適用されます。</p>
+
+  <h2>2. 取得する情報</h2>
+  <p>当サイトは、次の情報を取得することがあります。</p>
+  <ol>
+    <li><strong>アクセス情報</strong>: IPアドレス、ブラウザの種類、OS、参照元URL、アクセス日時、閲覧したページなど、通信時に自動的に送信される情報。</li>
+    <li><strong>Googleアカウント情報</strong>: 管理画面へのログインにGoogleアカウントを使用する場合に、Googleから提供されるメールアドレス、氏名、プロフィール画像、GoogleアカウントID。</li>
+    <li><strong>Cookie等</strong>: ログイン状態の維持やセキュリティ確保のために発行されるCookie。</li>
+  </ol>
+  <p>一般の閲覧者が当サイトを閲覧するにあたり、氏名やメールアドレスなどの入力を求めることはありません。</p>
+
+  <h2>3. Googleユーザーデータの取り扱い</h2>
+  <p>当サイトは、Googleアカウントによるログイン（OAuth 2.0）を、管理画面へのアクセスを許可された管理者本人であることを確認する目的にのみ使用します。</p>
+  <ul>
+    <li>要求する権限は、基本的なプロフィール情報およびメールアドレスの参照（openid、email、profile）に限られます。Gmail、Googleドライブ、カレンダー等のデータにはアクセスしません。</li>
+    <li>取得したGoogleユーザーデータは、認証およびアクセス制御の目的以外には使用せず、販売、広告配信、第三者への提供、AI・機械学習モデルの学習には使用しません。</li>
+    <li>当サイトによるGoogle APIから受け取った情報の使用および他のアプリへの転送は、<a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer noopener">Google API サービスのユーザーデータに関するポリシー</a>（限定使用の要件を含みます）を遵守します。</li>
+  </ul>
+
+  <h2>4. 利用目的</h2>
+  <ol>
+    <li>当サイトの提供、維持、改善のため</li>
+    <li>管理画面の利用者の本人確認およびアクセス制御のため</li>
+    <li>不正アクセス、攻撃その他の不正行為の検知・防止のため</li>
+    <li>障害対応および利用状況の把握のため</li>
+  </ol>
+
+  <h2>5. 外部サービスの利用</h2>
+  <p>当サイトは、ホスティング、セキュリティ、認証のために次の外部サービスを利用しており、これらの事業者が各社のプライバシーポリシーに従って情報を処理する場合があります。</p>
+  <ul>
+    <li>Cloudflare, Inc.（ホスティング、CDN、Cloudflare Zero Trustによるアクセス制御）: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noreferrer noopener">プライバシーポリシー</a></li>
+    <li>Google LLC（Googleアカウントによる認証）: <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer noopener">プライバシーポリシー</a></li>
+  </ul>
+
+  <h2>6. 第三者提供</h2>
+  <p>当サイトは、次の場合を除き、取得した情報を本人の同意なく第三者に提供しません。</p>
+  <ul>
+    <li>法令に基づく場合</li>
+    <li>人の生命、身体または財産の保護のために必要がある場合</li>
+    <li>前項の外部サービス事業者に、サイト運営に必要な範囲で処理を委託する場合</li>
+  </ul>
+
+  <h2>7. 保存期間と削除</h2>
+  <p>取得した情報は、利用目的の達成に必要な期間に限り保存し、不要となった後は速やかに削除します。認証用のCookieはセッションの有効期限が切れると無効になります。Googleアカウントとの連携は、<a href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer noopener">Googleアカウントの権限設定</a>からいつでも解除できます。情報の開示、訂正、削除を希望する場合は、下記お問い合わせ先までご連絡ください。</p>
+
+  <h2>8. 安全管理</h2>
+  <p>当サイトは、通信の暗号化（HTTPS）、Cloudflare AccessおよびJWT検証による管理画面へのアクセス制限など、取得した情報の漏えい、滅失、毀損を防止するための合理的な措置を講じます。</p>
+
+  <h2>9. 本ポリシーの変更</h2>
+  <p>当サイトは、必要に応じて本ポリシーを変更することがあります。重要な変更を行う場合は、当ページで告知します。変更後の本ポリシーは、当ページに掲載した時点から効力を生じます。</p>
+
+  <h2>10. お問い合わせ</h2>
+  <p>本ポリシーに関するお問い合わせは、下記メールアドレスまでご連絡ください。</p>
+  <p>メールアドレス: <a href="mailto:kokage.dev@gmail.com">kokage.dev@gmail.com</a></p>
+  <p>運営者: KOKAGE</p>
+</LegalDocument>

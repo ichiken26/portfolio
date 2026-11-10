@@ -1,0 +1,29 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+interface Props { title: string; description: string; eyebrow: string; enactedAt: string; updatedAt?: string }
+const { title, description, eyebrow, enactedAt, updatedAt } = Astro.props;
+---
+<Layout title={`${title} | KOKAGE`} description={description}>
+  <main class="legal">
+    <header class="legal-hero">
+      <p class="eyebrow">{eyebrow}</p>
+      <h1 class="page-title">{title}</h1>
+      <p class="lead">{description}</p>
+      <p class="dates">制定日: {enactedAt}{updatedAt && <> / 最終改定日: {updatedAt}</>}</p>
+    </header>
+    <article class="legal-body"><slot /></article>
+  </main>
+</Layout>
+<style>
+  .legal{max-width:880px}
+  .legal-hero,.legal-body{padding:clamp(20px,4vw,36px);border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+  .legal-hero .page-title{font-size:clamp(30px,6vw,52px);line-height:1.15}
+  .dates{margin:18px 0 0;color:var(--muted);font-size:14px}
+  .legal-body{margin-top:22px}
+  .legal-body :global(h2){margin:36px 0 12px;padding-top:4px;font-size:clamp(19px,3vw,23px);line-height:1.4}
+  .legal-body :global(h2:first-child){margin-top:0}
+  .legal-body :global(p),.legal-body :global(li){color:var(--muted);line-height:1.9}
+  .legal-body :global(ol),.legal-body :global(ul){display:grid;gap:6px;padding-left:1.4em}
+  .legal-body :global(a){color:var(--accent-strong);font-weight:700;overflow-wrap:anywhere}
+</style>

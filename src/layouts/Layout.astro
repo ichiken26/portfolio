@@ -42,6 +42,13 @@ const navItems = [...fixedNavItems, ...customNavItems];
 				</nav>
 			</header>
 			<slot />
+			<footer class="site-footer">
+				<span>© KOKAGE</span>
+				<nav class="footer-nav" aria-label="Legal">
+					<a href="/privacy-policy/">プライバシーポリシー</a>
+					<a href="/use-kiyaku/">利用規約</a>
+				</nav>
+			</footer>
 		</div>
 		<script>
 			const favicon = document.querySelector<HTMLLinkElement>("#animated-favicon");
@@ -174,6 +181,12 @@ const navItems = [...fixedNavItems, ...customNavItems];
 		color: var(--muted);
 		border-top: 1px solid var(--line);
 		background: rgba(255, 255, 255, 0.68);
+	}
+
+	.footer-nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 16px;
 	}
 
 	.site-footer a {

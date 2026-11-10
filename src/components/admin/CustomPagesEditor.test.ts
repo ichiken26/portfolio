@@ -14,4 +14,14 @@ describe("custom pages", () => {
     expect(route).toContain("renderSafeMarkdown(page.body)");
     expect(layout).toContain("publicPages()");
   });
+  it("reserves the static legal page slugs", () => {
+    expect(source).toContain('"privacy-policy", "use-kiyaku"');
+  });
+});
+
+describe("legal pages", () => {
+  it("links the privacy policy and terms from every public page footer", () => {
+    expect(layout).toContain('href="/privacy-policy/"');
+    expect(layout).toContain('href="/use-kiyaku/"');
+  });
 });
