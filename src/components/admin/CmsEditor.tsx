@@ -1,21 +1,11 @@
+import { Badge, Box, Button, Code, Flex, Grid, Heading, HStack, Image, Input, InputGroup, Link, NativeSelect, Stack, Text, Textarea } from "@chakra-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { API_BASE, adminApi } from "../../lib/api";
-import { renderSafeMarkdown } from "../../lib/markdown";
-import type {
-  AboutBlock,
-  AboutData,
-  Product,
-  ProductsPage,
-  TechData,
-  Versioned,
-} from "../../lib/types";
-type Kind = "about" | "tech-stack" | "products";
+import type { AboutBlock, AboutData, Product, ProductsPage, TechData, Versioned } from "../../lib/types";
+import { AddButton, DeleteButton, FormField, LoadState, MarkdownPreview, Panel, RemoveRowButton, SaveToolbar, TagsInput, removeAt, replaceAt } from "./ui";
+
+export type Kind = "about" | "tech-stack" | "products";
 const uid = () => crypto.randomUUID();
-const splitTags = (v: string) =>
-  v
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
 const imageFileName = (value: string) => {
   if (!value) return "未設定";
   try {
@@ -37,7 +27,7 @@ export const normalizeProductSlug = (value: string) => {
   candidate = candidate.replace(/^\/+|\/+$/g, "").replace(/^products\/+/, "");
   return candidate
     .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -45,11 +35,7 @@ export const normalizeProductSlug = (value: string) => {
     .replace(/-+$/g, "");
 };
 
-export function useAutoSave<T extends { version?: number }>(
-  path: string,
-  initial: T,
-  save: (value: T) => Promise<T>,
-) {
+export function useAutoSave<T extends { version?: number }>(path: string, initial: T, save: (value: T) => Promise<T>) {
   const [value, setStoredValue] = useState(initial);
   const [state, setState] = useState("保存済み");
   const [dirty, setDirty] = useState(false);
@@ -115,487 +101,218 @@ export function useAutoSave<T extends { version?: number }>(
   return { value, setValue, state, saveNow, dirty, saving };
 }
 
+type ContentData = AboutData | TechData | ProductsPage;
+
 export function ContentEditor({ kind }: { kind: Kind }) {
-  const [loaded, setLoaded] = useState<Versioned<
-    AboutData | TechData | ProductsPage
-  > | null>(null);
+  const [loaded, setLoaded] = useState<Versioned<ContentData> | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    adminApi<Versioned<AboutData | TechData | ProductsPage>>(
-      `/content/${kind}`,
-    )
+    adminApi<Versioned<ContentData>>(`/content/${kind}`)
       .then(setLoaded)
       .catch((e) => setError(String(e)));
   }, [kind]);
-  if (error)
-    return (
-      <main className="cms">
-        <p role="alert">{error}</p>
-      </main>
-    );
-  if (!loaded)
-    return (
-      <main className="cms">
-        <p>読み込み中…</p>
-      </main>
-    );
-  return (
-    <LoadedContent
-      key={`${kind}-${loaded.version}`}
-      kind={kind}
-      initial={loaded}
-    />
-  );
+  if (error || !loaded) return <LoadState error={error} />;
+  return <LoadedContent key={`${kind}-${loaded.version}`} kind={kind} initial={loaded} />;
 }
-function LoadedContent({
-  kind,
-  initial,
-}: {
-  kind: Kind;
-  initial: Versioned<AboutData | TechData | ProductsPage>;
-}) {
+
+function LoadedContent({ kind, initial }: { kind: Kind; initial: Versioned<ContentData> }) {
   const saver = useCallback(
-    async (v: typeof initial) =>
-      adminApi<typeof initial>(`/content/${kind}`, {
-        method: "PUT",
-        body: JSON.stringify(v),
-      }),
+    async (v: typeof initial) => adminApi<typeof initial>(`/content/${kind}`, { method: "PUT", body: JSON.stringify(v) }),
     [kind],
   );
   const { value, setValue, state, saveNow, dirty, saving } = useAutoSave(kind, initial, saver);
-  const updateData = (data: typeof value.data) => setValue({ ...value, data });
+  const updateData = (data: ContentData) => setValue({ ...value, data });
   return (
-    <main className="cms">
-      <div className="cms-toolbar">
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={value.published}
-            onChange={(e) =>
-              setValue({ ...value, published: e.target.checked })
-            }
-          />
-          <span>公開する</span>
-        </label>
-        <output aria-live="polite">{state}</output>
-        <button type="button" onClick={() => void saveNow()} disabled={!dirty || saving}>今すぐ保存</button>
-      </div>
+    <>
+      <SaveToolbar
+        published={value.published}
+        onPublishedChange={(published) => setValue({ ...value, published })}
+        state={state}
+        dirty={dirty}
+        saving={saving}
+        onSave={() => void saveNow()}
+      />
       {kind === "about" ? (
         <AboutForm value={value.data as AboutData} onChange={updateData} />
       ) : kind === "tech-stack" ? (
         <TechForm value={value.data as TechData} onChange={updateData} />
       ) : (
-        <ProductsPageForm
-          value={value.data as ProductsPage}
-          onChange={updateData}
-        />
+        <ProductsPageForm value={value.data as ProductsPage} onChange={updateData} />
       )}
-    </main>
+    </>
   );
 }
-function AboutForm({
-  value,
-  onChange,
-}: {
-  value: AboutData;
-  onChange: (v: AboutData) => void;
-}) {
+
+const blockTypes = [
+  { type: "text", label: "テキスト" },
+  { type: "list", label: "一覧" },
+  { type: "links", label: "リンク一覧" },
+  { type: "table", label: "表" },
+] as const;
+const blockLabel = (type: AboutBlock["type"]) => blockTypes.find((b) => b.type === type)?.label ?? type;
+const newBlock = (type: AboutBlock["type"]): AboutBlock => {
+  switch (type) {
+    case "text":
+      return { id: uid(), title: "新しい項目", type, text: "" };
+    case "table":
+      return { id: uid(), title: "新しい表", type, rows: [] };
+    case "links":
+      return { id: uid(), title: "新しいリンク一覧", type, items: [] };
+    case "list":
+      return { id: uid(), title: "新しい一覧", type, items: [] };
+  }
+};
+
+function AboutForm({ value, onChange }: { value: AboutData; onChange: (v: AboutData) => void }) {
   const blocks = value.blocks;
-  const update = (i: number, b: AboutBlock) =>
-    onChange({ ...value, blocks: blocks.map((x, n) => (n === i ? b : x)) });
+  const update = (i: number, b: AboutBlock) => onChange({ ...value, blocks: replaceAt(blocks, i, b) });
   return (
-    <>
-      <Field label="概要">
-        <textarea
-          value={value.overview}
-          onChange={(e) => onChange({ ...value, overview: e.target.value })}
-        />
-      </Field>
-      <section>
-        <h2>コンテンツ</h2>
+    <Stack gap={6}>
+      <Panel>
+        <FormField label="概要">
+          <Textarea rows={5} autoresize value={value.overview} onChange={(e) => onChange({ ...value, overview: e.target.value })} />
+        </FormField>
+      </Panel>
+      <Stack gap={4}>
+        <Heading size="lg">コンテンツ</Heading>
         {blocks.map((b, i) => (
-          <div className="editor-card" key={b.id}>
-            <div className="row">
-              <input
-                aria-label="見出し"
-                value={b.title}
-                onChange={(e) => update(i, { ...b, title: e.target.value })}
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  onChange({
-                    ...value,
-                    blocks: blocks.filter((_, n) => n !== i),
-                  })
-                }
-              >
-                削除
-              </button>
-            </div>
-            {b.type === "text" && (
-              <textarea
-                value={b.text}
-                onChange={(e) => update(i, { ...b, text: e.target.value })}
-              />
-            )}{" "}
-            {b.type === "list" && (
-              <ListEditor
-                items={b.items}
-                onChange={(items) => update(i, { ...b, items })}
-              />
-            )}{" "}
-            {b.type === "links" && (
-              <LinkEditor
-                items={b.items}
-                onChange={(items) => update(i, { ...b, items })}
-              />
-            )}{" "}
-            {b.type === "table" && (
-              <TableEditor
-                rows={b.rows}
-                onChange={(rows) => update(i, { ...b, rows })}
-              />
-            )}
-          </div>
+          <Panel
+            key={b.id}
+            title={
+              <HStack gap={3}>
+                <Badge colorPalette="teal" variant="subtle" flexShrink={0}>
+                  {blockLabel(b.type)}
+                </Badge>
+                <Input aria-label="見出し" fontWeight="bold" value={b.title} onChange={(e) => update(i, { ...b, title: e.target.value })} />
+              </HStack>
+            }
+            aside={
+              <DeleteButton onClick={() => onChange({ ...value, blocks: removeAt(blocks, i) })}>削除</DeleteButton>
+            }
+          >
+            {b.type === "text" && <Textarea rows={4} autoresize aria-label="本文" value={b.text} onChange={(e) => update(i, { ...b, text: e.target.value })} />}
+            {b.type === "list" && <ListEditor items={b.items} onChange={(items) => update(i, { ...b, items })} />}
+            {b.type === "links" && <LinkEditor items={b.items} onChange={(items) => update(i, { ...b, items })} />}
+            {b.type === "table" && <TableEditor rows={b.rows} onChange={(rows) => update(i, { ...b, rows })} />}
+          </Panel>
         ))}
-        <div className="button-row">
-          {(["text", "list", "links", "table"] as const).map((type) => (
-            <button
-              type="button"
-              key={type}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  blocks: [
-                    ...blocks,
-                    type === "text"
-                      ? { id: uid(), title: "新しい項目", type, text: "" }
-                      : type === "table"
-                        ? { id: uid(), title: "新しい表", type, rows: [] }
-                        : type === "links"
-                          ? {
-                              id: uid(),
-                              title: "新しいリンク一覧",
-                              type,
-                              items: [],
-                            }
-                          : { id: uid(), title: "新しい一覧", type, items: [] },
-                  ],
-                })
-              }
-            >
-              ＋ {type}
-            </button>
+        <HStack wrap="wrap" gap={2}>
+          {blockTypes.map(({ type, label }) => (
+            <AddButton key={type} onClick={() => onChange({ ...value, blocks: [...blocks, newBlock(type)] })}>
+              ＋ {label}
+            </AddButton>
           ))}
-        </div>
-      </section>
-    </>
+        </HStack>
+      </Stack>
+    </Stack>
   );
 }
-function ListEditor({
-  items,
-  onChange,
-}: {
-  items: string[];
-  onChange: (v: string[]) => void;
-}) {
+
+function ListEditor({ items, onChange, type, placeholder }: { items: string[]; onChange: (v: string[]) => void; type?: string; placeholder?: string }) {
   return (
-    <div>
+    <Stack gap={2}>
       {items.map((v, i) => (
-        <div className="row" key={i}>
-          <input
-            aria-label={`項目 ${i + 1}`}
-            value={v}
-            onChange={(e) =>
-              onChange(items.map((x, n) => (n === i ? e.target.value : x)))
-            }
-          />
-          <button
-            type="button"
-            onClick={() => onChange(items.filter((_, n) => n !== i))}
-          >
-            －
-          </button>
-        </div>
+        <HStack key={i} gap={2}>
+          <Input aria-label={`項目 ${i + 1}`} type={type} placeholder={placeholder} value={v} onChange={(e) => onChange(replaceAt(items, i, e.target.value))} />
+          <RemoveRowButton label={`項目 ${i + 1} を削除`} onClick={() => onChange(removeAt(items, i))} />
+        </HStack>
       ))}
-      <button type="button" onClick={() => onChange([...items, ""])}>
-        ＋ 行
-      </button>
-    </div>
+      <AddButton onClick={() => onChange([...items, ""])}>＋ 行</AddButton>
+    </Stack>
   );
 }
-function LinkEditor({
-  items,
-  onChange,
-}: {
-  items: { label: string; url: string }[];
-  onChange: (v: { label: string; url: string }[]) => void;
-}) {
+
+function LinkEditor({ items, onChange }: { items: { label: string; url: string }[]; onChange: (v: { label: string; url: string }[]) => void }) {
   return (
-    <div>
+    <Stack gap={2}>
       {items.map((v, i) => (
-        <div className="row" key={i}>
-          <input
-            aria-label="表示名"
-            value={v.label}
-            onChange={(e) =>
-              onChange(
-                items.map((x, n) =>
-                  n === i ? { ...x, label: e.target.value } : x,
-                ),
-              )
-            }
-          />
-          <input
-            aria-label="URL"
-            type="url"
-            value={v.url}
-            onChange={(e) =>
-              onChange(
-                items.map((x, n) =>
-                  n === i ? { ...x, url: e.target.value } : x,
-                ),
-              )
-            }
-          />
-          <button
-            type="button"
-            onClick={() => onChange(items.filter((_, n) => n !== i))}
-          >
-            －
-          </button>
-        </div>
+        <Flex key={i} gap={2} align="center">
+          <Grid flex="1" templateColumns={{ base: "1fr", md: "1fr 2fr" }} gap={2}>
+            <Input aria-label="表示名" placeholder="表示名" value={v.label} onChange={(e) => onChange(replaceAt(items, i, { ...v, label: e.target.value }))} />
+            <Input aria-label="URL" type="url" placeholder="https://" value={v.url} onChange={(e) => onChange(replaceAt(items, i, { ...v, url: e.target.value }))} />
+          </Grid>
+          <RemoveRowButton label="リンクを削除" onClick={() => onChange(removeAt(items, i))} />
+        </Flex>
       ))}
-      <button
-        type="button"
-        onClick={() => onChange([...items, { label: "", url: "" }])}
-      >
-        ＋ リンク
-      </button>
-    </div>
+      <AddButton onClick={() => onChange([...items, { label: "", url: "" }])}>＋ リンク</AddButton>
+    </Stack>
   );
 }
-function TableEditor({
-  rows,
-  onChange,
-}: {
-  rows: { label: string; value: string }[];
-  onChange: (v: { label: string; value: string }[]) => void;
-}) {
+
+function TableEditor({ rows, onChange }: { rows: { label: string; value: string }[]; onChange: (v: { label: string; value: string }[]) => void }) {
   return (
-    <div>
+    <Stack gap={2}>
       {rows.map((v, i) => (
-        <div className="row" key={i}>
-          <input
-            aria-label="左セル"
-            value={v.label}
-            onChange={(e) =>
-              onChange(
-                rows.map((x, n) =>
-                  n === i ? { ...x, label: e.target.value } : x,
-                ),
-              )
-            }
-          />
-          <input
-            aria-label="右セル"
-            value={v.value}
-            onChange={(e) =>
-              onChange(
-                rows.map((x, n) =>
-                  n === i ? { ...x, value: e.target.value } : x,
-                ),
-              )
-            }
-          />
-          <button
-            type="button"
-            onClick={() => onChange(rows.filter((_, n) => n !== i))}
-          >
-            －
-          </button>
-        </div>
+        <Flex key={i} gap={2} align="center">
+          <Grid flex="1" templateColumns={{ base: "1fr", md: "1fr 2fr" }} gap={2}>
+            <Input aria-label="左セル" placeholder="項目" value={v.label} onChange={(e) => onChange(replaceAt(rows, i, { ...v, label: e.target.value }))} />
+            <Input aria-label="右セル" placeholder="内容" value={v.value} onChange={(e) => onChange(replaceAt(rows, i, { ...v, value: e.target.value }))} />
+          </Grid>
+          <RemoveRowButton label="行を削除" onClick={() => onChange(removeAt(rows, i))} />
+        </Flex>
       ))}
-      <button
-        type="button"
-        onClick={() => onChange([...rows, { label: "", value: "" }])}
-      >
-        ＋ 行
-      </button>
-    </div>
+      <AddButton onClick={() => onChange([...rows, { label: "", value: "" }])}>＋ 行</AddButton>
+    </Stack>
   );
 }
-function TechForm({
-  value,
-  onChange,
-}: {
-  value: TechData;
-  onChange: (v: TechData) => void;
-}) {
+
+type TechCategory = TechData["categories"][number];
+type TechItem = TechCategory["items"][number];
+const techColumns = { base: "1fr", md: "2fr 1fr 2fr auto" };
+
+function TechForm({ value, onChange }: { value: TechData; onChange: (v: TechData) => void }) {
   const cats = value.categories;
+  const updateCat = (i: number, next: TechCategory) => onChange({ categories: replaceAt(cats, i, next) });
+  const updateItem = (i: number, j: number, patch: Partial<TechItem>) =>
+    updateCat(i, { ...cats[i], items: replaceAt(cats[i].items, j, { ...cats[i].items[j], ...patch }) });
   return (
-    <section>
+    <Stack gap={5}>
       {cats.map((c, i) => (
-        <div className="editor-card" key={c.id}>
-          <div className="row">
-            <input
-              aria-label="大項目名"
-              value={c.name}
-              onChange={(e) =>
-                onChange({
-                  categories: cats.map((x, n) =>
-                    n === i ? { ...x, name: e.target.value } : x,
-                  ),
-                })
-              }
-            />
-            <button
-              type="button"
-              onClick={() =>
-                onChange({ categories: cats.filter((_, n) => n !== i) })
-              }
-            >
-              削除
-            </button>
-          </div>
+        <Panel
+          key={c.id}
+          title={<Input aria-label="大項目名" fontWeight="bold" value={c.name} onChange={(e) => updateCat(i, { ...c, name: e.target.value })} />}
+          aside={<DeleteButton onClick={() => onChange({ categories: removeAt(cats, i) })}>削除</DeleteButton>}
+        >
+          {c.items.length > 0 && (
+            <Grid templateColumns={techColumns} gap={2} display={{ base: "none", md: "grid" }} color="fg.muted" fontSize="sm" fontWeight="bold">
+              <Text>技術名</Text>
+              <Text>対応レベル</Text>
+              <Text>タグ（カンマ区切り）</Text>
+              <Box w="8" />
+            </Grid>
+          )}
           {c.items.map((item, j) => (
-            <div className="grid4" key={item.id}>
-              <input
-                aria-label="技術名"
-                value={item.name}
-                onChange={(e) =>
-                  onChange({
-                    categories: cats.map((x, n) =>
-                      n === i
-                        ? {
-                            ...x,
-                            items: x.items.map((y, m) =>
-                              m === j ? { ...y, name: e.target.value } : y,
-                            ),
-                          }
-                        : x,
-                    ),
-                  })
-                }
-              />
-              <input
-                aria-label="対応レベル"
-                value={item.level}
-                onChange={(e) =>
-                  onChange({
-                    categories: cats.map((x, n) =>
-                      n === i
-                        ? {
-                            ...x,
-                            items: x.items.map((y, m) =>
-                              m === j ? { ...y, level: e.target.value } : y,
-                            ),
-                          }
-                        : x,
-                    ),
-                  })
-                }
-              />
-              <input
-                aria-label="タグ（カンマ区切り）"
-                value={item.tags.join(", ")}
-                onChange={(e) =>
-                  onChange({
-                    categories: cats.map((x, n) =>
-                      n === i
-                        ? {
-                            ...x,
-                            items: x.items.map((y, m) =>
-                              m === j
-                                ? { ...y, tags: splitTags(e.target.value) }
-                                : y,
-                            ),
-                          }
-                        : x,
-                    ),
-                  })
-                }
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  onChange({
-                    categories: cats.map((x, n) =>
-                      n === i
-                        ? { ...x, items: x.items.filter((_, m) => m !== j) }
-                        : x,
-                    ),
-                  })
-                }
-              >
-                －
-              </button>
-            </div>
+            <Grid key={item.id} templateColumns={techColumns} gap={2} alignItems="center" pb={{ base: 3, md: 0 }} borderBottomWidth={{ base: "1px", md: 0 }} borderColor="#eef3ed">
+              <Input aria-label="技術名" placeholder="技術名" value={item.name} onChange={(e) => updateItem(i, j, { name: e.target.value })} />
+              <Input aria-label="対応レベル" placeholder="実務対応" value={item.level} onChange={(e) => updateItem(i, j, { level: e.target.value })} />
+              <TagsInput aria-label="タグ（カンマ区切り）" placeholder="TypeScript, JavaScript" value={item.tags} onChange={(tags) => updateItem(i, j, { tags })} />
+              <RemoveRowButton label={`${item.name || "技術"}を削除`} onClick={() => updateCat(i, { ...c, items: removeAt(c.items, j) })} />
+            </Grid>
           ))}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                categories: cats.map((x, n) =>
-                  n === i
-                    ? {
-                        ...x,
-                        items: [
-                          ...x.items,
-                          { id: uid(), name: "", level: "", tags: [] },
-                        ],
-                      }
-                    : x,
-                ),
-              })
-            }
-          >
-            ＋ 技術
-          </button>
-        </div>
+          <AddButton onClick={() => updateCat(i, { ...c, items: [...c.items, { id: uid(), name: "", level: "", tags: [] }] })}>＋ 技術</AddButton>
+        </Panel>
       ))}
-      <button
-        type="button"
-        onClick={() =>
-          onChange({
-            categories: [
-              ...cats,
-              { id: uid(), name: "新しいカテゴリ", items: [] },
-            ],
-          })
-        }
-      >
-        ＋ 大項目
-      </button>
-    </section>
+      <AddButton onClick={() => onChange({ categories: [...cats, { id: uid(), name: "新しいカテゴリ", items: [] }] })}>＋ 大項目</AddButton>
+    </Stack>
   );
 }
-function ProductsPageForm({
-  value,
-  onChange,
-}: {
-  value: ProductsPage;
-  onChange: (v: ProductsPage) => void;
-}) {
+
+function ProductsPageForm({ value, onChange }: { value: ProductsPage; onChange: (v: ProductsPage) => void }) {
   return (
-    <>
-      <Field label="タイトル">
-        <input
-          value={value.title}
-          onChange={(e) => onChange({ ...value, title: e.target.value })}
-        />
-      </Field>
-      <Field label="概要">
-        <textarea
-          value={value.summary}
-          onChange={(e) => onChange({ ...value, summary: e.target.value })}
-        />
-      </Field>
+    <Stack gap={6}>
+      <Panel title="一覧ページ" kicker="Products page">
+        <FormField label="タイトル">
+          <Input value={value.title} onChange={(e) => onChange({ ...value, title: e.target.value })} />
+        </FormField>
+        <FormField label="概要">
+          <Textarea rows={3} autoresize value={value.summary} onChange={(e) => onChange({ ...value, summary: e.target.value })} />
+        </FormField>
+      </Panel>
       <ProductsManager />
-    </>
+    </Stack>
   );
 }
+
 function ProductsManager() {
   const [items, setItems] = useState<Product[]>([]);
   const [title, setTitle] = useState("");
@@ -604,10 +321,7 @@ function ProductsManager() {
   const [createState, setCreateState] = useState("");
   const [creating, setCreating] = useState(false);
   const slug = normalizeProductSlug(urlInput);
-  const refresh = () =>
-    adminApi<{ products: Product[] }>("/products").then((r) =>
-      setItems(r.products),
-    );
+  const refresh = () => adminApi<{ products: Product[] }>("/products").then((r) => setItems(r.products));
   useEffect(() => {
     void refresh();
   }, []);
@@ -641,92 +355,93 @@ function ProductsManager() {
     }
   };
   return (
-    <section className="products-manager">
-      <div className="section-heading">
-        <div>
-          <p className="section-kicker">Products</p>
-          <h2>製品一覧</h2>
-        </div>
-        <span className="item-count">{items.length}件</span>
-      </div>
-      <div className="product-links product-list">
-        {items.map((p) => (
-          <div className="product-list-item" key={p.slug}>
-            <a href={`/admin/products/${p.slug}/`}>
-              <strong>{p.title}</strong>
-              <small>/products/{p.slug}/</small>
-            </a>
-            <button
-              className="danger-button"
-              type="button"
-              onClick={async () => {
-                if (confirm(`${p.title}を削除しますか？`)) {
-                  await adminApi(`/products/${p.slug}`, { method: "DELETE" });
-                  await refresh();
-                }
-              }}
-            >
-              削除
-            </button>
-          </div>
-        ))}
-      </div>
-      <form className="product-create-card" onSubmit={(event) => { event.preventDefault(); void add(); }}>
-        <div className="product-create-heading">
-          <div>
-            <p className="section-kicker">New product</p>
-            <h3>製品を追加</h3>
-          </div>
-          <span>非公開で作成されます</span>
-        </div>
-        <div className="product-create-grid">
-          <label className="field">
-            <span>製品名</span>
-            <input
-              placeholder="例: Memo App"
-              value={title}
-              onChange={(event) => {
-                const nextTitle = event.target.value;
-                setTitle(nextTitle);
-                setCreateState("");
-                if (!urlTouched) setUrlInput(normalizeProductSlug(nextTitle));
-              }}
-            />
-          </label>
-          <label className="field">
-            <span>URL</span>
-            <div className="product-url-input">
-              <span>kokage-studio.com/products/</span>
-              <input
-                aria-describedby="product-url-help"
-                placeholder="memo-app"
-                value={urlInput}
-                onChange={(event) => {
-                  setUrlTouched(true);
-                  setUrlInput(event.target.value);
-                  setCreateState("");
+    <Stack gap={6}>
+      <Panel title="製品一覧" kicker="Products" aside={<Badge size="lg" variant="outline">{items.length}件</Badge>}>
+        {items.length === 0 && <Text color="fg.muted">製品はまだありません。</Text>}
+        <Stack gap={2}>
+          {items.map((p) => (
+            <Flex key={p.slug} align="center" gap={3} p={3} borderWidth="1px" borderColor="#dce5dc" borderRadius="md" _hover={{ bg: "#f7f8f4" }}>
+              <Link href={`/admin/products/${p.slug}/`} flex="1" minW="0" display="grid" gap={0.5} textDecoration="none">
+                <Text as="strong" fontWeight="bold" truncate>
+                  {p.title}
+                </Text>
+                <Text as="small" color="fg.muted" truncate>
+                  /products/{p.slug}/
+                </Text>
+              </Link>
+              <Badge colorPalette={p.published ? "teal" : "gray"}>{p.published ? "公開中" : "非公開"}</Badge>
+              <DeleteButton
+                onClick={async () => {
+                  if (confirm(`${p.title}を削除しますか？`)) {
+                    await adminApi(`/products/${p.slug}`, { method: "DELETE" });
+                    await refresh();
+                  }
                 }}
-              />
-            </div>
-            <small id="product-url-help">
-              空白・大文字・記号は自動整形されます。完全なURLの貼り付けも可能です。
-            </small>
-          </label>
-        </div>
-        <div className="product-create-footer">
-          <div className="product-url-preview">
-            <span>作成されるURL</span>
-            <code>{slug ? `https://kokage-studio.com/products/${slug}/` : "URLを入力してください"}</code>
-          </div>
-          <button className="primary-button" type="submit" disabled={!title.trim() || !slug || creating}>
-            {creating ? "作成中…" : "＋ 製品を追加して編集"}
-          </button>
-        </div>
-        {createState && <p className={createState.startsWith("作成失敗") ? "form-message error" : "form-message"} role="status">{createState}</p>}
-      </form>
-    </section>
+              >
+                削除
+              </DeleteButton>
+            </Flex>
+          ))}
+        </Stack>
+      </Panel>
+      <Box asChild>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void add();
+          }}
+        >
+          <Panel title="製品を追加" kicker="New product" aside={<Text fontSize="sm" color="fg.muted">非公開で作成されます</Text>}>
+            <Grid templateColumns={{ base: "1fr", md: "1fr 1.4fr" }} gap={4}>
+              <FormField label="製品名">
+                <Input
+                  placeholder="例: Memo App"
+                  value={title}
+                  onChange={(event) => {
+                    const nextTitle = event.target.value;
+                    setTitle(nextTitle);
+                    setCreateState("");
+                    if (!urlTouched) setUrlInput(normalizeProductSlug(nextTitle));
+                  }}
+                />
+              </FormField>
+              <FormField label="URL" helper="空白・大文字・記号は自動整形されます。完全なURLの貼り付けも可能です。">
+                <InputGroup startAddon="kokage-studio.com/products/">
+                  <Input
+                    placeholder="memo-app"
+                    value={urlInput}
+                    onChange={(event) => {
+                      setUrlTouched(true);
+                      setUrlInput(event.target.value);
+                      setCreateState("");
+                    }}
+                  />
+                </InputGroup>
+              </FormField>
+            </Grid>
+            <Flex align="center" justify="space-between" gap={4} wrap="wrap" p={3} bg="#f7f8f4" borderRadius="md">
+              <Stack gap={1} minW="0">
+                <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+                  作成されるURL
+                </Text>
+                <Code wordBreak="break-all">{slug ? `https://kokage-studio.com/products/${slug}/` : "URLを入力してください"}</Code>
+              </Stack>
+              <Button type="submit" colorPalette="teal" disabled={!title.trim() || !slug || creating} loading={creating} loadingText="作成中…">
+                ＋ 製品を追加して編集
+              </Button>
+            </Flex>
+            {createState && (
+              <Text role="status" fontSize="sm" color={createState.startsWith("作成失敗") ? "red.600" : "fg.muted"}>
+                {createState}
+              </Text>
+            )}
+          </Panel>
+        </form>
+      </Box>
+    </Stack>
   );
 }
+
 export function ProductEditor({ slug }: { slug: string }) {
   const [loaded, setLoaded] = useState<Product | null>(null);
   const [error, setError] = useState("");
@@ -735,44 +450,30 @@ export function ProductEditor({ slug }: { slug: string }) {
       .then(setLoaded)
       .catch((e) => setError(String(e)));
   }, [slug]);
-  if (error)
-    return (
-      <main className="cms">
-        <p role="alert">{error}</p>
-      </main>
-    );
-  if (!loaded) return <main className="cms">読み込み中…</main>;
+  if (error || !loaded) return <LoadState error={error} />;
   return <LoadedProduct initial={loaded} />;
 }
+
+const dummyColors = [
+  { value: "green", label: "緑" },
+  { value: "blue", label: "青" },
+  { value: "red", label: "赤" },
+  { value: "yellow", label: "黄" },
+] as const;
+
 function LoadedProduct({ initial }: { initial: Product }) {
   const [imageStatus, setImageStatus] = useState("");
-  const saver = useCallback(
-    (v: Product) =>
-      adminApi<Product>(`/products/${v.slug}`, {
-        method: "PUT",
-        body: JSON.stringify(v),
-      }),
-    [],
-  );
-  const {
-    value: p,
-    setValue: setP,
-    state,
-    saveNow,
-    dirty,
-    saving,
-  } = useAutoSave(initial.slug, initial, saver);
-  const set = <K extends keyof Product>(k: K, v: Product[K]) =>
-    setP({ ...p, [k]: v });
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const saver = useCallback((v: Product) => adminApi<Product>(`/products/${v.slug}`, { method: "PUT", body: JSON.stringify(v) }), []);
+  const { value: p, setValue: setP, state, saveNow, dirty, saving } = useAutoSave(initial.slug, initial, saver);
+  const set = <K extends keyof Product>(k: K, v: Product[K]) => setP({ ...p, [k]: v });
   const upload = async (file: File) => {
     setImageStatus("アップロード中…");
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const data = await adminApi<{ url: string }>("/images", {
-        method: "POST",
-        body: fd,
-      });
+      const data = await adminApi<{ url: string }>("/images", { method: "POST", body: fd });
       set("imagePath", `${API_BASE.replace(/\/api\/v1$/, "")}${data.url}`);
       setImageStatus("アップロード完了（自動保存待ち）");
     } catch (error) {
@@ -780,144 +481,132 @@ function LoadedProduct({ initial }: { initial: Product }) {
     }
   };
   return (
-    <main className="cms">
-      <div className="cms-toolbar">
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={p.published}
-            onChange={(e) => set("published", e.target.checked)}
-          />{" "}
-          公開する
-        </label>
-        <output aria-live="polite">{state}</output>
-        <button type="button" onClick={() => void saveNow()} disabled={!dirty || saving}>今すぐ保存</button>
-      </div>
-      <div className="two-col">
-        <div>
-          <Field label="タイトル">
-            <input
-              value={p.title}
-              onChange={(e) => set("title", e.target.value)}
-            />
-          </Field>
-          <Field label="概要">
-            <textarea
-              value={p.summary}
-              onChange={(e) => set("summary", e.target.value)}
-            />
-          </Field>
-          <Field label="プロダクト種別">
-            <input
-              value={p.type}
-              onChange={(e) => set("type", e.target.value)}
-            />
-          </Field>
-          <Field label="ステータス">
-            <select
-              value={p.status}
-              onChange={(e) =>
-                set("status", e.target.value as Product["status"])
-              }
-            >
-              <option>構想中</option>
-              <option>制作中</option>
-              <option>公開中</option>
-            </select>
-          </Field>
-          <Field label="技術タグ（カンマ区切り）">
-            <input
-              value={p.tags.join(", ")}
-              onChange={(e) => set("tags", splitTags(e.target.value))}
-            />
-          </Field>
-          <Field label="公開サイトURL">
-            <input
-              type="url"
-              value={p.liveUrl}
-              onChange={(e) => set("liveUrl", e.target.value)}
-            />
-          </Field>
-          <Field label="画像">
-            <small className="current-image-name">
-              現在の画像: <code>{imageFileName(p.imagePath)}</code>
-            </small>
-            {imageStatus && <span className="image-upload-status" role="status">{imageStatus}</span>}
-            <span
-              className="drop-zone"
-              onDragOver={(event) => event.preventDefault()}
+    <>
+      <SaveToolbar published={p.published} onPublishedChange={(published) => set("published", published)} state={state} dirty={dirty} saving={saving} onSave={() => void saveNow()} />
+      <Grid templateColumns={{ base: "1fr", lg: "minmax(0,1fr) minmax(0,1fr)" }} gap={6} alignItems="start">
+        <Stack gap={6}>
+          <Panel title="基本情報">
+            <FormField label="タイトル">
+              <Input value={p.title} onChange={(e) => set("title", e.target.value)} />
+            </FormField>
+            <FormField label="概要">
+              <Textarea rows={3} autoresize value={p.summary} onChange={(e) => set("summary", e.target.value)} />
+            </FormField>
+            <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr" }} gap={4}>
+              <FormField label="プロダクト種別">
+                <Input value={p.type} onChange={(e) => set("type", e.target.value)} />
+              </FormField>
+              <FormField label="ステータス">
+                <NativeSelect.Root>
+                  <NativeSelect.Field value={p.status} onChange={(e) => set("status", e.target.value as Product["status"])}>
+                    <option>構想中</option>
+                    <option>制作中</option>
+                    <option>公開中</option>
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              </FormField>
+            </Grid>
+            <FormField label="技術タグ（カンマ区切り）">
+              <TagsInput placeholder="Astro, Cloudflare" value={p.tags} onChange={(tags) => set("tags", tags)} />
+            </FormField>
+            <FormField label="公開サイトURL">
+              <Input type="url" placeholder="https://" value={p.liveUrl} onChange={(e) => set("liveUrl", e.target.value)} />
+            </FormField>
+          </Panel>
+          <Panel title="画像">
+            <Text fontSize="sm" color="fg.muted">
+              現在の画像: <Code>{imageFileName(p.imagePath)}</Code>
+            </Text>
+            {imageStatus && (
+              <Text role="status" fontSize="sm" color={imageStatus.startsWith("アップロード失敗") ? "red.600" : "teal.700"}>
+                {imageStatus}
+              </Text>
+            )}
+            <Stack
+              align="center"
+              gap={3}
+              p={6}
+              borderWidth="2px"
+              borderStyle="dashed"
+              borderColor={dragging ? "teal.500" : "#dce5dc"}
+              bg={dragging ? "teal.50" : "#f7f8f4"}
+              borderRadius="md"
+              textAlign="center"
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
               onDrop={(event) => {
                 event.preventDefault();
+                setDragging(false);
                 const file = event.dataTransfer.files[0];
                 if (file) void upload(file);
               }}
             >
-              ここへ画像をドロップ、または
+              <Text color="fg.muted">ここへ画像をドロップ、または</Text>
+              <Button size="sm" variant="outline" colorPalette="teal" onClick={() => fileInput.current?.click()}>
+                ファイルを選択
+              </Button>
+              <Text fontSize="xs" color="fg.muted">
+                JPEG / PNG / GIF・5MiBまで
+              </Text>
               <input
+                ref={fileInput}
+                hidden
                 type="file"
                 accept="image/jpeg,image/png,image/gif"
-                onChange={(e) =>
-                  e.target.files?.[0] && void upload(e.target.files[0])
-                }
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void upload(file);
+                  e.target.value = "";
+                }}
               />
-            </span>
-            <select
-              value={p.dummyColor}
-              onChange={(e) => {
-                const c = e.target.value as Product["dummyColor"];
-                setP({
-                  ...p,
-                  dummyColor: c,
-                  imagePath: `/images/products/dummy-${c}.svg`,
-                });
-              }}
-            >
-              <option value="green">緑</option>
-              <option value="blue">青</option>
-              <option value="red">赤</option>
-              <option value="yellow">黄</option>
-            </select>
-          </Field>
-          <Field label="GitHub URL">
-            <ListEditor
-              items={p.githubUrls}
-              onChange={(v) => set("githubUrls", v)}
-            />
-          </Field>
-          <Field label="記事（Markdown）">
-            <textarea
-              className="article"
-              value={p.body}
-              onChange={(e) => set("body", e.target.value)}
-            />
-          </Field>
-        </div>
-        <aside>
-          <h2>プレビュー</h2>
-          <div className="preview-image-frame">
-            {p.imagePath ? <img className="preview-image" src={p.imagePath} alt={`${p.title} の画像プレビュー`} /> : <span>画像未設定</span>}
-          </div>
-          <h1>{p.title}</h1>
-          <p>{p.summary}</p>
-          <article
-            dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(p.body) }}
-          />
-        </aside>
-      </div>
-    </main>
-  );
-}
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      {children}
-    </label>
+            </Stack>
+            <FormField label="ダミー画像の色" helper="選択すると画像がダミー画像に置き換わります。">
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  value={p.dummyColor}
+                  onChange={(e) => {
+                    const c = e.target.value as Product["dummyColor"];
+                    setP({ ...p, dummyColor: c, imagePath: `/images/products/dummy-${c}.svg` });
+                  }}
+                >
+                  {dummyColors.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </FormField>
+          </Panel>
+          <Panel title="GitHub URL">
+            <ListEditor type="url" placeholder="https://github.com/..." items={p.githubUrls} onChange={(v) => set("githubUrls", v)} />
+          </Panel>
+          <Panel title="記事（Markdown）">
+            <Textarea aria-label="記事（Markdown）" rows={18} fontFamily="mono" fontSize="sm" value={p.body} onChange={(e) => set("body", e.target.value)} />
+          </Panel>
+        </Stack>
+        <Box position={{ lg: "sticky" }} top={{ lg: "150px" }} maxH={{ lg: "calc(100vh - 170px)" }} overflowY={{ lg: "auto" }} borderRadius="lg">
+          <Panel title="プレビュー" kicker="Preview">
+            <Flex align="center" justify="center" aspectRatio={16 / 9} bg="#eef3ed" borderRadius="md" overflow="hidden">
+              {p.imagePath ? (
+                <Image src={p.imagePath} alt={`${p.title} の画像プレビュー`} maxW="full" maxH="full" objectFit="contain" />
+              ) : (
+                <Text color="fg.muted">画像未設定</Text>
+              )}
+            </Flex>
+            <Heading as="h2" size="2xl">
+              {p.title}
+            </Heading>
+            <Text color="fg.muted">{p.summary}</Text>
+            <MarkdownPreview source={p.body} />
+          </Panel>
+        </Box>
+      </Grid>
+    </>
   );
 }

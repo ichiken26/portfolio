@@ -1,4 +1,5 @@
 ---
-import AdminShell from "../../components/admin/AdminShell.astro"; import { ContentEditor } from "../../components/admin/CmsEditor";
+import AdminShell from "../../components/admin/AdminShell.astro";
+import { AdminApp } from "../../components/admin/AdminApp";
 ---
-<AdminShell title="About 編集"><ContentEditor kind="about" client:only="react" /></AdminShell>
+<AdminShell title="About 編集"><AdminApp view="content" kind="about" title="About 編集" client:only="react" /></AdminShell>

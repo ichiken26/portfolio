@@ -8,7 +8,7 @@ describe("custom pages", () => {
     expect(source).toContain("＋ 固定ページ");
     expect(source).toContain("Markdown本文");
     expect(source).toContain('method: "DELETE"');
-    expect(source).toContain("今すぐ保存");
+    expect(source).toContain("<SaveToolbar");
   });
   it("renders public Markdown safely and adds published navigation", () => {
     expect(route).toContain("renderSafeMarkdown(page.body)");
