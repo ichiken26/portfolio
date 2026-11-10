@@ -13,7 +13,7 @@ stack:
   - Cloudflare Zero Trust
   - Google OAuth
 order: 3
-liveUrl: "https://ichikenbookmark.62ichiken.workers.dev/"
+liveUrl: "https://bookmark.kokage-studio.com/"
 githubUrls: 
   "表示用フロント": "https://github.com/ichiken26/ichikenBookmark"
   "外部API": "https://github.com/ichiken26/bookMarkSiteAPI"

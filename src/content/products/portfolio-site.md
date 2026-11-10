@@ -10,7 +10,7 @@ stack:
   - CSS
   - Cloudflare Workers
 order: 1
-liveUrl: "https://portfolio.62ichiken.workers.dev/"
+liveUrl: "https://kokage-studio.com/"
 githubUrls: 
   "Source": "https://github.com/ichiken26/portfolio"
 ---

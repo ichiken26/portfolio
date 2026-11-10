@@ -10,7 +10,7 @@ stack:
   - Cloudflare D1
   - Firebase
 order: 2
-liveUrl: "https://memo-app.62ichiken.workers.dev/"
+liveUrl: "https://memo.kokage-studio.com/"
 githubUrls: 
   "Source": "https://github.com/ichiken26/memo-app"
 ---
